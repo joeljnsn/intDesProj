@@ -1,5 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart';
 
 
 void main() {
@@ -30,46 +35,109 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  late AccelerometerEvent ae;
+  late UserAccelerometerEvent ae;
+  double totalAe = 0;
+  double aeX = 0;
+  double aeY = 0;
+  double aeZ = 0;
+  late MapController _mapController;
+  double _markerLat = 0;
+  double _markerLng = 0;
 
-  late UserAccelerometerEvent uae;
+  void initLocation() async{
+    Location location = new Location();
 
-  late GyroscopeEvent ge;
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
 
-  late MagnetometerEvent me;
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return;
+      }
+    }
+
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    location.onLocationChanged.listen((LocationData crntLoc) {
+      setState(() {
+        _markerLat = crntLoc.latitude ?? 0;
+        _markerLng = crntLoc.longitude ?? 0;
+        _mapController.move(LatLng(_markerLat, _markerLng), 16);
+      });
+    });
+
+  }
 
   @override
   initState() {
-    accelerometerEvents.listen((AccelerometerEvent event) {
+    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
       setState(() {
         ae = event;
+        aeX = (event.x).abs();
+        aeY = (event.y).abs();
+        aeZ = (event.z).abs();
+        totalAe = aeX + aeY + aeZ;
       });
     });
-    /*userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-      setState(() {
-        uae = event;
-      });
-    });*/
-    gyroscopeEvents.listen((GyroscopeEvent event) {
-      setState(() {
-        ge = event;
-      });
-    });
-    /*magnetometerEvents.listen((MagnetometerEvent event) {
-      setState(() {
-        me = event;
-      });
-    });*/
 
-    ae = AccelerometerEvent(0, 0, 0);
-    ge = GyroscopeEvent(0, 0, 0);
+    ae = UserAccelerometerEvent(0, 0, 0);
 
+    _mapController = MapController();
+
+    initLocation();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  Widget flutterMap(){
+    return FlutterMap(
+    options: MapOptions(
+      center: LatLng(0, 0),
+      zoom: 16,
+    ),
+    mapController: _mapController,
+    nonRotatedChildren: [
+      AttributionWidget.defaultWidget(
+        source: 'OpenStreetMap contributors',
+        onSourceTapped: null,
+      ),
+    ],
+    children: [
+      TileLayer(
+        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        //userAgentPackageName: 'com.example.app',
+      ),
+      MarkerLayer(
+        markers: [
+          Marker(
+            point: LatLng(_markerLat, _markerLng),
+            width: 20,
+            height: 20,
+            builder: (context) => Container(color: Colors.red,),
+          ),
+        ],
+      ),
+    ],
+  );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: (totalAe > 2) ? Colors.red : Colors.white,
       appBar: AppBar(
         title: const Text("Test"),
       ),
@@ -81,8 +149,10 @@ class _MyHomePageState extends State<MyHomePage> {
             const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
             Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),
             const SizedBox(height: 25, width: double.infinity,),
-            const Text("Gyroscope:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-            Text("x: ${ge.x.toStringAsFixed(4)} y: ${ge.y.toStringAsFixed(4)} z: ${ge.z.toStringAsFixed(4)}"),
+            SizedBox(
+              height: 500,
+                child: flutterMap()
+            ),
           ],
         ),
       ),
