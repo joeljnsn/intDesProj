@@ -33,6 +33,7 @@ dependencies:
   flutter_map: ^3.0.0
   latlong2: ^0.8.1
   location: ^4.4.0
+  akar_icons_flutter: 1.1.11
 
 
   # The following adds the Cupertino Icons font to your application.

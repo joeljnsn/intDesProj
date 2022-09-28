@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -44,8 +45,16 @@ class _MyHomePageState extends State<MyHomePage> {
   double _markerLat = 0;
   double _markerLng = 0;
 
+  final Stopwatch _stopwatch = Stopwatch();
+  late Timer _timer;
+  int _roundDuration = 1;
+  bool eyeOpened = true;
+
+  bool inGoal = false;
+  List<LatLng> _goalCoordinates = [];
+
   void initLocation() async{
-    Location location = new Location();
+    Location location = Location();
 
     bool serviceEnabled;
     PermissionStatus permissionGranted;
@@ -66,11 +75,15 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
 
-    location.onLocationChanged.listen((LocationData crntLoc) {
+    location.onLocationChanged.listen((LocationData currentLoc) {
       setState(() {
-        _markerLat = crntLoc.latitude ?? 0;
-        _markerLng = crntLoc.longitude ?? 0;
-        _mapController.move(LatLng(_markerLat, _markerLng), 16);
+        _markerLat = currentLoc.latitude ?? 0;
+        _markerLng = currentLoc.longitude ?? 0;
+        double currentZoom = _mapController.zoom;
+        LatLng currentLatLng = LatLng(_markerLat, _markerLng);
+        _mapController.move(currentLatLng, currentZoom); //Moves map to current location. Hard transition, do we want this? might be annoying
+
+        inGoal = checkInGoal(currentLatLng, _goalCoordinates);
       });
     });
 
@@ -93,13 +106,45 @@ class _MyHomePageState extends State<MyHomePage> {
     _mapController = MapController();
 
     initLocation();
+
+    _goalCoordinates = goalCoordinates(LatLng(57.706093, 11.939035), 0.00015); //Set goalCoordinates.
+
+    gameStateTimer();
     super.initState();
   }
 
   @override
   void dispose() {
     _mapController.dispose();
+    _timer.cancel();
     super.dispose();
+  }
+
+  void gameStateTimer(){
+    _stopwatch.reset();
+    _stopwatch.start();
+    _roundDuration = Random().nextInt(6)+4;
+    _timer = Timer(
+        Duration(seconds: _roundDuration), //random between 4 and 10 seconds
+    () {
+          //eyeOpened = !eyeOpened;
+          gameStateTimer();
+    }
+    );
+  }
+
+  List<LatLng> goalCoordinates(LatLng center, double size){
+    List<LatLng> goalCoord = [center, center, center, center];
+    goalCoord[0] = LatLng(center.latitude + size, center.longitude + size);
+    goalCoord[1] = LatLng(center.latitude + size, center.longitude - size);
+    goalCoord[2] = LatLng(center.latitude - size, center.longitude - size);
+    goalCoord[3] = LatLng(center.latitude - size, center.longitude + size);
+    return goalCoord;
+  }
+
+  bool checkInGoal(LatLng userPos, List<LatLng> goalCoord){
+    return (((userPos.latitude < goalCoord[0].latitude) && (userPos.longitude < goalCoord[0].longitude))
+        && ((userPos.latitude > goalCoord[2].latitude) && (userPos.longitude > goalCoord[2].longitude)));
   }
 
   Widget flutterMap(){
@@ -123,10 +168,28 @@ class _MyHomePageState extends State<MyHomePage> {
       MarkerLayer(
         markers: [
           Marker(
-            point: LatLng(_markerLat, _markerLng),
+            point: LatLng(_markerLat, _markerLng), //User marker
             width: 20,
             height: 20,
-            builder: (context) => Container(color: Colors.red,),
+            builder: (context) => Container(decoration: BoxDecoration(
+              color: Colors.lightBlue,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 6
+              )
+            ),
+            ),
+          ),
+        ],
+      ),
+      PolygonLayer(
+        polygonCulling: false,
+        polygons: [
+          Polygon(
+            points: _goalCoordinates,
+            color: const Color.fromRGBO(0, 255, 0, .4),
+            isFilled: true,
           ),
         ],
       ),
@@ -137,23 +200,42 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: (totalAe > 2) ? Colors.red : Colors.white,
-      appBar: AppBar(
-        title: const Text("Test"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-            Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),
-            const SizedBox(height: 25, width: double.infinity,),
-            SizedBox(
-              height: 500,
-                child: flutterMap()
-            ),
-          ],
+      backgroundColor: Colors.white,
+      body: Container(
+        color: eyeOpened ? Colors.black : Color.fromRGBO(0, 0, 0, _stopwatch.elapsedMilliseconds/(_roundDuration*1000)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+              Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
+              const SizedBox(height: 25, width: double.infinity,),
+              SizedBox(
+                height: eyeOpened ? 500 : 0,
+                  child: flutterMap()
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 16.0),
+                child: Text("${_stopwatch.elapsed}", style: const TextStyle(color: Colors.white),),
+              ),
+              Container(
+                margin: const EdgeInsets.only(top: 16.0),
+                height: 2,
+                width: 200,
+                color: Colors.white,
+              ),
+              eyeOpened ? AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: 50,
+                width: totalAe * 100,
+                color: Colors.amber,
+              ) : Container(),
+              eyeOpened ? const Text("DO NOT MOVE", style: TextStyle(fontSize: 40, color: Colors.amber))
+                  : const Text("MOVE", style: TextStyle(fontSize: 120, color: Colors.amber)),
+              Text("At goal: $inGoal", style: const TextStyle(color: Colors.white),)
+            ],
+          ),
         ),
       ),
     );
