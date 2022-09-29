@@ -6,6 +6,8 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
+import 'package:vibration/vibration.dart';
+import 'package:wakelock/wakelock.dart';
 
 
 void main() {
@@ -19,6 +21,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Test',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.pink,
       ),
@@ -50,8 +53,12 @@ class _MyHomePageState extends State<MyHomePage> {
   int _roundDuration = 1;
   bool eyeOpened = true;
 
+  late Timer _vibrationTimer;
+
   bool inGoal = false;
   List<LatLng> _goalCoordinates = [];
+
+  late bool _hasVibration;
 
   void initLocation() async{
     Location location = Location();
@@ -101,6 +108,8 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     });
 
+    Wakelock.enable(); //Does not work?
+
     ae = UserAccelerometerEvent(0, 0, 0);
 
     _mapController = MapController();
@@ -108,6 +117,8 @@ class _MyHomePageState extends State<MyHomePage> {
     initLocation();
 
     _goalCoordinates = goalCoordinates(LatLng(57.706093, 11.939035), 0.00015); //Set goalCoordinates.
+
+    initVibration();
 
     gameStateTimer();
     super.initState();
@@ -117,20 +128,35 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _mapController.dispose();
     _timer.cancel();
+    Wakelock.disable();
     super.dispose();
+  }
+
+  void initVibration() async {
+    bool? checkVibration = await Vibration.hasVibrator();
+    _hasVibration = checkVibration ?? false;
   }
 
   void gameStateTimer(){
     _stopwatch.reset();
     _stopwatch.start();
     _roundDuration = Random().nextInt(6)+4;
+    vibrationTimer(_roundDuration - 3);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
     () {
-          //eyeOpened = !eyeOpened;
+          eyeOpened = !eyeOpened;
           gameStateTimer();
     }
     );
+  }
+
+  void vibrationTimer(int vibDuration) {
+    _vibrationTimer = Timer(Duration(seconds: vibDuration), () {
+      if(_hasVibration){
+        Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
+      }
+    });
   }
 
   List<LatLng> goalCoordinates(LatLng center, double size){
@@ -200,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.blueGrey,
       body: Container(
         color: eyeOpened ? Colors.black : Color.fromRGBO(0, 0, 0, _stopwatch.elapsedMilliseconds/(_roundDuration*1000)),
         child: Padding(
@@ -210,7 +236,6 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
-              const SizedBox(height: 25, width: double.infinity,),
               SizedBox(
                 height: eyeOpened ? 500 : 0,
                   child: flutterMap()
@@ -227,12 +252,12 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               eyeOpened ? AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                height: 50,
+                height: 20,
                 width: totalAe * 100,
                 color: Colors.amber,
               ) : Container(),
-              eyeOpened ? const Text("DO NOT MOVE", style: TextStyle(fontSize: 40, color: Colors.amber))
-                  : const Text("MOVE", style: TextStyle(fontSize: 120, color: Colors.amber)),
+              eyeOpened ? const Text("DO NOT MOVE", style: TextStyle(fontSize: 36, color: Colors.amber))
+                  : const Text("MOVE", style: TextStyle(fontSize: 100, color: Colors.amber)),
               Text("At goal: $inGoal", style: const TextStyle(color: Colors.white),)
             ],
           ),
