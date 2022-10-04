@@ -257,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
               /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
               SizedBox(
-                height: eyeOpened ? 200 : 0,
+                height: eyeOpened ? 500 : 0,
                   child: flutterMap()
               ),
               Container(
