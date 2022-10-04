@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:indesproj/end.dart';
+import 'package:indesproj/start.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -25,7 +27,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.pink,
       ),
-      home: const MyHomePage(),
+      home: const StartPage(),
     );
   }
 }
@@ -60,6 +62,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   late bool _hasVibration;
 
+  bool playing = false;
+
+  int score = 0;
+
   void initLocation() async{
     Location location = Location();
 
@@ -92,6 +98,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
         inGoal = checkInGoal(currentLatLng, _goalCoordinates);
       });
+
+      if(inGoal && !eyeOpened){
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => EndPage(score),
+          ),
+        );
+      }
+
     });
 
   }
@@ -105,6 +120,11 @@ class _MyHomePageState extends State<MyHomePage> {
         aeY = (event.y).abs();
         aeZ = (event.z).abs();
         totalAe = aeX + aeY + aeZ;
+
+        if(totalAe > 2 && playing && eyeOpened){
+          score--;
+        }
+
       });
     });
 
@@ -120,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initVibration();
 
-    gameStateTimer();
+    //gameStateTimer();
     super.initState();
   }
 
@@ -237,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
               /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
               SizedBox(
-                height: eyeOpened ? 500 : 0,
+                height: eyeOpened ? 200 : 0,
                   child: flutterMap()
               ),
               Container(
@@ -256,9 +276,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: totalAe * 100,
                 color: Colors.amber,
               ) : Container(),
-              eyeOpened ? const Text("DO NOT MOVE", style: TextStyle(fontSize: 36, color: Colors.amber))
-                  : const Text("MOVE", style: TextStyle(fontSize: 100, color: Colors.amber)),
-              Text("At goal: $inGoal", style: const TextStyle(color: Colors.white),)
+              playing ? (eyeOpened ? const Text("DO NOT MOVE", style: TextStyle(fontSize: 36, color: Colors.amber))
+                  : const Text("MOVE", style: TextStyle(fontSize: 100, color: Colors.amber)))
+                  : TextButton(
+                style: ButtonStyle(
+                  foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+                ),
+                onPressed: () {
+                  gameStateTimer();
+                  setState(() {
+                    playing = true;
+                    score = 0;
+                  });
+                },
+                child: const Text('Start Game'),
+              ),
+              Text("Score: $score", style: const TextStyle(color: Colors.white),),
+              Text("At goal: $inGoal", style: const TextStyle(color: Colors.white),),
             ],
           ),
         ),
