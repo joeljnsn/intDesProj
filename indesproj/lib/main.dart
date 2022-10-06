@@ -68,28 +68,12 @@ class _MyHomePageState extends State<MyHomePage> {
   bool movedLastRedLight = false;
   bool goToStart = false;
 
-  List<int> listOfDuration = [
-    5,
-    5,
-    3,
-    7,
-    3,
-    4,
-    8,
-    6,
-    7,
-    3,
-    6,
-    9,
-    7,
-    4,
-    7,
-    8,
-    9,
-    4,
-    4
-  ];
+  List<int> listOfDuration = [6, 6, 5, 7, 5, 5, 8, 6, 7, 5, 6, 9, 7, 5, 7, 8, 7, 5, 5];
+
   int iDur = 0;
+
+  bool _checkForMovement = false;
+  late Timer _checkForMovementTimer;
 
   void initLocation() async {
     Location location = Location();
@@ -150,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
         aeZ = (event.z).abs();
         totalAe = aeX + aeY + aeZ;
 
-        if (totalAe > 2 && playing && (eyeOpened || movedLastRedLight)) {
+        if (totalAe > 2 && playing && _checkForMovement && (eyeOpened || movedLastRedLight)) {
           score++;
           if ((score >= 10) ||
               (score >= 5 && movedLastRedLight && !eyeOpened)) {
@@ -170,12 +154,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _goalCoordinates = goalCoordinates(
-        LatLng(57.706722468187635, 11.941214167243423),
-        0.00015); //Set goalCoordinates.
+    _goalCoordinates = goalCoordinates(LatLng(57.70680144781405, 11.941158728073676), 0.00015); //Set goalCoordinates.
 
-    _startZoneCoordinates =
-        goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
+    _startZoneCoordinates = goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
 
     initVibration();
 
@@ -197,17 +178,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void gameStateTimer() {
+    _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
       movedLastRedLight = false;
     }
     _stopwatch.reset();
     _stopwatch.start();
-
     _roundDuration = listOfDuration[iDur % listOfDuration.length];
     iDur++;
     //_roundDuration = Random().nextInt(6) + 4;
     vibrationTimer(_roundDuration - 3);
+    checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
         () {
@@ -219,11 +201,22 @@ class _MyHomePageState extends State<MyHomePage> {
   void vibrationTimer(int vibDuration) {
     _vibrationTimer = Timer(Duration(seconds: vibDuration), () {
       if (_hasVibration) {
-        if (!eyeOpened) {
-          //Only vibrates closed -> open. Is this good?
-          Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
+        if(!movedLastRedLight){
+          if (!eyeOpened) {
+            //closed -> open.
+            Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
+          } else {
+            //open -> closed.
+            Vibration.vibrate(pattern: [1975, 125, 100, 800]);
+          }
         }
       }
+    });
+  }
+
+  void checkForMovementTimer(int checkDuration) {
+    _checkForMovementTimer = Timer(Duration(seconds: checkDuration), () {
+      _checkForMovement = true;
     });
   }
 
@@ -326,13 +319,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: flutterMap()),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
-                child: Text(
-                  "${_stopwatch.elapsed}",
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(top: 16.0),
                 height: 2,
                 width: 200,
                 color: Colors.white,
@@ -382,14 +368,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       child: const Text('Start Game'),
                     ),
-              Text(
+              /*Text(
                 "Score: $score",
                 style: const TextStyle(color: Colors.white),
               ),
               Text(
                 "At goal: $inGoal",
                 style: const TextStyle(color: Colors.white),
-              ),
+              ),*/
             ],
           ),
         ),
