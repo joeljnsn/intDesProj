@@ -11,7 +11,6 @@ import 'package:location/location.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 
-
 void main() {
   runApp(const MyApp());
 }
@@ -40,7 +39,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   late UserAccelerometerEvent ae;
   double totalAe = 0;
   double aeX = 0;
@@ -59,14 +57,41 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool inGoal = false;
   List<LatLng> _goalCoordinates = [];
+  bool inStart = false;
+  List<LatLng> _startZoneCoordinates = [];
 
   late bool _hasVibration;
 
   bool playing = false;
 
   int score = 0;
+  bool movedLastRedLight = false;
+  bool goToStart = false;
 
-  void initLocation() async{
+  List<int> listOfDuration = [
+    5,
+    5,
+    3,
+    7,
+    3,
+    4,
+    8,
+    6,
+    7,
+    3,
+    6,
+    9,
+    7,
+    4,
+    7,
+    8,
+    9,
+    4,
+    4
+  ];
+  int iDur = 0;
+
+  void initLocation() async {
     Location location = Location();
 
     bool serviceEnabled;
@@ -94,12 +119,14 @@ class _MyHomePageState extends State<MyHomePage> {
         _markerLng = currentLoc.longitude ?? 0;
         double currentZoom = _mapController.zoom;
         LatLng currentLatLng = LatLng(_markerLat, _markerLng);
-        _mapController.move(currentLatLng, currentZoom); //Moves map to current location. Hard transition, do we want this? might be annoying
+        _mapController.move(currentLatLng,
+            currentZoom); //Moves map to current location. Hard transition, do we want this? might be annoying
 
         inGoal = checkInGoal(currentLatLng, _goalCoordinates);
+        inStart = checkInGoal(currentLatLng, _startZoneCoordinates);
       });
 
-      if(inGoal && !eyeOpened){
+      if (inGoal && !eyeOpened && !goToStart) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => EndPage(score),
@@ -107,8 +134,10 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       }
 
+      if (goToStart && inStart) {
+        goToStart = false;
+      }
     });
-
   }
 
   @override
@@ -121,10 +150,15 @@ class _MyHomePageState extends State<MyHomePage> {
         aeZ = (event.z).abs();
         totalAe = aeX + aeY + aeZ;
 
-        if(totalAe > 2 && playing && eyeOpened){
-          score--;
+        if (totalAe > 2 && playing && (eyeOpened || movedLastRedLight)) {
+          score++;
+          if ((score >= 10) ||
+              (score >= 5 && movedLastRedLight && !eyeOpened)) {
+            goToStart = true;
+          } else if (score >= 5) {
+            movedLastRedLight = true;
+          }
         }
-
       });
     });
 
@@ -136,7 +170,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _goalCoordinates = goalCoordinates(LatLng(57.706093, 11.939035), 0.00015); //Set goalCoordinates.
+    _goalCoordinates = goalCoordinates(
+        LatLng(57.706722468187635, 11.941214167243423),
+        0.00015); //Set goalCoordinates.
+
+    _startZoneCoordinates =
+        goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
 
     initVibration();
 
@@ -157,90 +196,103 @@ class _MyHomePageState extends State<MyHomePage> {
     _hasVibration = checkVibration ?? false;
   }
 
-  void gameStateTimer(){
+  void gameStateTimer() {
+    score = 0;
+    if (eyeOpened) {
+      movedLastRedLight = false;
+    }
     _stopwatch.reset();
     _stopwatch.start();
-    _roundDuration = Random().nextInt(6)+4;
+
+    _roundDuration = listOfDuration[iDur % listOfDuration.length];
+    iDur++;
+    //_roundDuration = Random().nextInt(6) + 4;
     vibrationTimer(_roundDuration - 3);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
-    () {
-          eyeOpened = !eyeOpened;
-          gameStateTimer();
-    }
-    );
+        () {
+      eyeOpened = !eyeOpened;
+      gameStateTimer();
+    });
   }
 
   void vibrationTimer(int vibDuration) {
     _vibrationTimer = Timer(Duration(seconds: vibDuration), () {
-      if(_hasVibration){
-        Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
+      if (_hasVibration) {
+        if (!eyeOpened) {
+          //Only vibrates closed -> open. Is this good?
+          Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
+        }
       }
     });
   }
 
-  List<LatLng> goalCoordinates(LatLng center, double size){
+  List<LatLng> goalCoordinates(LatLng center, double size) {
     List<LatLng> goalCoord = [center, center, center, center];
-    goalCoord[0] = LatLng(center.latitude + size, center.longitude + size);
-    goalCoord[1] = LatLng(center.latitude + size, center.longitude - size);
-    goalCoord[2] = LatLng(center.latitude - size, center.longitude - size);
-    goalCoord[3] = LatLng(center.latitude - size, center.longitude + size);
+    goalCoord[0] = LatLng(center.latitude + size, center.longitude + 2 * size);
+    goalCoord[1] = LatLng(center.latitude + size, center.longitude - 2 * size);
+    goalCoord[2] = LatLng(center.latitude - size, center.longitude - 2 * size);
+    goalCoord[3] = LatLng(center.latitude - size, center.longitude + 2 * size);
     return goalCoord;
   }
 
-  bool checkInGoal(LatLng userPos, List<LatLng> goalCoord){
-    return (((userPos.latitude < goalCoord[0].latitude) && (userPos.longitude < goalCoord[0].longitude))
-        && ((userPos.latitude > goalCoord[2].latitude) && (userPos.longitude > goalCoord[2].longitude)));
+  bool checkInGoal(LatLng userPos, List<LatLng> goalCoord) {
+    return (((userPos.latitude < goalCoord[0].latitude) &&
+            (userPos.longitude < goalCoord[0].longitude)) &&
+        ((userPos.latitude > goalCoord[2].latitude) &&
+            (userPos.longitude > goalCoord[2].longitude)));
   }
 
-  Widget flutterMap(){
+  Widget flutterMap() {
     return FlutterMap(
-    options: MapOptions(
-      center: LatLng(0, 0),
-      zoom: 16,
-    ),
-    mapController: _mapController,
-    nonRotatedChildren: [
-      AttributionWidget.defaultWidget(
-        source: 'OpenStreetMap contributors',
-        onSourceTapped: null,
+      options: MapOptions(
+        center: LatLng(0, 0),
+        zoom: 16,
       ),
-    ],
-    children: [
-      TileLayer(
-        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-        //userAgentPackageName: 'com.example.app',
-      ),
-      MarkerLayer(
-        markers: [
-          Marker(
-            point: LatLng(_markerLat, _markerLng), //User marker
-            width: 20,
-            height: 20,
-            builder: (context) => Container(decoration: BoxDecoration(
-              color: Colors.lightBlue,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 6
-              )
+      mapController: _mapController,
+      /*nonRotatedChildren: [
+        AttributionWidget.defaultWidget(
+          source: 'OpenStreetMap contributors',
+          onSourceTapped: null,
+        ),
+      ],*/
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          //userAgentPackageName: 'com.example.app',
+        ),
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: LatLng(_markerLat, _markerLng), //User marker
+              width: 20,
+              height: 20,
+              builder: (context) => Container(
+                decoration: BoxDecoration(
+                    color: Colors.lightBlue,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 6)),
+              ),
             ),
+          ],
+        ),
+        PolygonLayer(
+          polygonCulling: false,
+          polygons: [
+            Polygon(
+              points: _goalCoordinates,
+              color: const Color.fromRGBO(0, 255, 0, .4),
+              isFilled: true,
             ),
-          ),
-        ],
-      ),
-      PolygonLayer(
-        polygonCulling: false,
-        polygons: [
-          Polygon(
-            points: _goalCoordinates,
-            color: const Color.fromRGBO(0, 255, 0, .4),
-            isFilled: true,
-          ),
-        ],
-      ),
-    ],
-  );
+            Polygon(
+              points: _startZoneCoordinates,
+              color: const Color.fromRGBO(0, 0, 255, .4),
+              isFilled: true,
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -248,21 +300,36 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Colors.blueGrey,
       body: Container(
-        color: eyeOpened ? Colors.black : Color.fromRGBO(0, 0, 0, _stopwatch.elapsedMilliseconds/(_roundDuration*1000)),
+        color: goToStart
+            ? Colors.blue
+            : (movedLastRedLight
+                ? Colors.red
+                : (eyeOpened
+                    ? Colors.black
+                    : Color.fromRGBO(
+                        0,
+                        0,
+                        0,
+                        _stopwatch.elapsedMilliseconds /
+                            (_roundDuration * 1000)))),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
               SizedBox(
-                height: eyeOpened ? 200 : 0,
-                  child: flutterMap()
-              ),
+                  height:
+                      (eyeOpened || movedLastRedLight || goToStart) ? 500 : 0,
+                  child: flutterMap()),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
-                child: Text("${_stopwatch.elapsed}", style: const TextStyle(color: Colors.white),),
+                child: Text(
+                  "${_stopwatch.elapsed}",
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
@@ -270,29 +337,59 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 200,
                 color: Colors.white,
               ),
-              eyeOpened ? AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 20,
-                width: totalAe * 100,
-                color: Colors.amber,
-              ) : Container(),
-              playing ? (eyeOpened ? const Text("DO NOT MOVE", style: TextStyle(fontSize: 36, color: Colors.amber))
-                  : const Text("MOVE", style: TextStyle(fontSize: 100, color: Colors.amber)))
+              (eyeOpened || movedLastRedLight)
+                  ? AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      height: 20,
+                      width: totalAe * 100,
+                      color: Colors.amber,
+                    )
+                  : Container(),
+              playing
+                  ? goToStart
+                      ? const Text("GO TO START",
+                          style: TextStyle(fontSize: 36, color: Colors.amber))
+                      : ((movedLastRedLight
+                          ? const Text("ILLEGAL MOVE",
+                              style:
+                                  TextStyle(fontSize: 36, color: Colors.amber))
+                          : (eyeOpened
+                              ? const Text("DO NOT MOVE",
+                                  style: TextStyle(
+                                      fontSize: 36, color: Colors.amber))
+                              : const Text("MOVE",
+                                  style: TextStyle(
+                                      fontSize: 100, color: Colors.amber)))))
                   : TextButton(
-                style: ButtonStyle(
-                  foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
-                ),
-                onPressed: () {
-                  gameStateTimer();
-                  setState(() {
-                    playing = true;
-                    score = 0;
-                  });
-                },
-                child: const Text('Start Game'),
+                      style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all<Color>(Colors.amber),
+                      ),
+                      onPressed: () {
+                        if (inStart) {
+                          gameStateTimer();
+                          setState(() {
+                            playing = true;
+                            score = 0;
+                          });
+                        } else {
+                          const snackbar = SnackBar(
+                            content: Text(
+                                "Cannot start game when not in starting zone."),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(snackbar);
+                        }
+                      },
+                      child: const Text('Start Game'),
+                    ),
+              Text(
+                "Score: $score",
+                style: const TextStyle(color: Colors.white),
               ),
-              Text("Score: $score", style: const TextStyle(color: Colors.white),),
-              Text("At goal: $inGoal", style: const TextStyle(color: Colors.white),),
+              Text(
+                "At goal: $inGoal",
+                style: const TextStyle(color: Colors.white),
+              ),
             ],
           ),
         ),
