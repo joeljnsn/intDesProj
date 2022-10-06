@@ -154,7 +154,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _goalCoordinates = goalCoordinates(LatLng(57.70680144781405, 11.941158728073676), 0.00015); //Set goalCoordinates.
+    _goalCoordinates = goalCoordinates(LatLng(57.70671289922682, 11.941174781546744), 0.00015); //Set goalCoordinates.
 
     _startZoneCoordinates = goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
 
@@ -348,8 +348,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                       fontSize: 100, color: Colors.amber)))))
                   : TextButton(
                       style: ButtonStyle(
-                        foregroundColor:
-                            MaterialStateProperty.all<Color>(Colors.amber),
+                        foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+                        backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
                       ),
                       onPressed: () {
                         if (inStart) {
@@ -366,7 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ScaffoldMessenger.of(context).showSnackBar(snackbar);
                         }
                       },
-                      child: const Text('Start Game'),
+                      child: const Text('Start Game', style: TextStyle(fontSize: 18)),
                     ),
               /*Text(
                 "Score: $score",

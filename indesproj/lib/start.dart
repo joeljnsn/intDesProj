@@ -19,6 +19,7 @@ class _StartPageState extends State<StartPage> {
           child: TextButton(
             style: ButtonStyle(
               foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+              backgroundColor: MaterialStateProperty.all<Color>(Colors.white30)
             ),
             onPressed: () {
               Navigator.of(context).pushReplacement(
@@ -27,7 +28,7 @@ class _StartPageState extends State<StartPage> {
                 ),
               );
             },
-            child: const Text('Play'),
+            child: const Text('Play', style: TextStyle(fontSize: 24)),
           )
 
       ),
