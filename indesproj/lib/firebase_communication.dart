@@ -1,17 +1,22 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:math';
 
 var rng = Random();
 
-class FirebaseConnection {
+class FirebaseConnection with ChangeNotifier {
   late FirebaseDatabase database;
   late DatabaseReference ref;
-  late DatabaseReference refUsers;
+  late DatabaseReference refMe;
+  late Map _playerPositions;
 
-  late DatabaseReference refAge;
-  FirebaseConnection();
+  late DatabaseReference refUsers;
+  String id = "";
+  FirebaseConnection({required this.id}) {
+    initConnection();
+  }
 
   void initConnection() async {
     await Firebase.initializeApp(
@@ -20,17 +25,26 @@ class FirebaseConnection {
     database = FirebaseDatabase.instance;
     ref = FirebaseDatabase.instance.ref();
 
-    refUsers = FirebaseDatabase.instance.ref("Users/1/1");
-    refAge = refUsers.child("age");
-    refAge.onValue.listen((DatabaseEvent event) {
+    refMe = FirebaseDatabase.instance.ref("Users/$id");
+    refUsers = FirebaseDatabase.instance.ref("Users");
+
+    refUsers.onValue.listen((DatabaseEvent event) {
       final data = event.snapshot.value;
-      print("$data was recived from listener");
+      print("listener triggerd");
+      updatePlayers();
     });
   }
 
-  addToDatabase() async {
-    int x = rng.nextInt(80);
-    print("randomized and uploaded: $x");
-    await refUsers.set({'name': 'Nils', 'age': x});
+  addToDatabase(double lat, double long) async {
+    await refMe.set({'latitude': lat, 'longitude': long});
   }
+
+  void updatePlayers() async {
+    DataSnapshot dbSnapshot = await refUsers.get();
+    print(dbSnapshot.value);
+    print("hejehej");
+    notifyListeners();
+  }
+
+  Map get playerPositions => _playerPositions;
 }

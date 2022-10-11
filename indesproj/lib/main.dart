@@ -11,9 +11,15 @@ import 'package:latlong2/latlong.dart';
 import 'package:location/location.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  int x = Random().nextInt(3000);
+
+  runApp(ChangeNotifierProvider(
+      create: (context) => FirebaseConnection(id: "$x"),
+      lazy: false,
+      child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -61,6 +67,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool inStart = false;
   List<LatLng> _startZoneCoordinates = [];
 
+  late LatLng currentLatLng;
+
   late bool _hasVibration;
 
   bool playing = false;
@@ -96,8 +104,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _checkForMovement = false;
   late Timer _checkForMovementTimer;
 
-  FirebaseConnection ourDatabase = FirebaseConnection();
-
   void initLocation() async {
     Location location = Location();
 
@@ -125,7 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _markerLat = currentLoc.latitude ?? 0;
         _markerLng = currentLoc.longitude ?? 0;
         double currentZoom = _mapController.zoom;
-        LatLng currentLatLng = LatLng(_markerLat, _markerLng);
+        currentLatLng = LatLng(_markerLat, _markerLng);
         _mapController.move(currentLatLng,
             currentZoom); //Moves map to current location. Hard transition, do we want this? might be annoying
 
@@ -188,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
         goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
 
     initVibration();
-    ourDatabase.initConnection();
+
     //gameStateTimer();
     super.initState();
   }
@@ -207,6 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void gameStateTimer() {
+    Provider.of<FirebaseConnection>(context, listen: false)
+        .addToDatabase(currentLatLng.latitude, currentLatLng.longitude);
     _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
@@ -383,14 +391,13 @@ class _MyHomePageState extends State<MyHomePage> {
                             MaterialStateProperty.all<Color>(Colors.white30),
                       ),
                       onPressed: () {
-                        if (inStart) {
+                        if (true) {
                           gameStateTimer();
                           setState(() {
                             playing = true;
                             score = 0;
                           });
                         } else {
-                          ourDatabase.addToDatabase();
                           const snackbar = SnackBar(
                             content: Text(
                                 "Cannot start game when not in starting zone."),
