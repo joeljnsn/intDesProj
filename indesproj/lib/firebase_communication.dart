@@ -12,11 +12,16 @@ class FirebaseConnection with ChangeNotifier {
   late FirebaseDatabase database;
   late DatabaseReference ref;
   late DatabaseReference refMe;
+  late DatabaseReference refGameState;
   late Map<String, dynamic> _playerPositions;
   List<Marker> _userMarkers = [];
 
   late DatabaseReference refUsers;
   String id = "";
+
+  bool playing = false;
+  int goalIndex = 0;
+
   FirebaseConnection({required this.id}) {
     initConnection();
   }
@@ -38,6 +43,16 @@ class FirebaseConnection with ChangeNotifier {
       }
     });
 
+    refGameState = FirebaseDatabase.instance.ref("Gamestate");
+
+    refGameState.onValue.listen((DatabaseEvent event) {
+      final data = event.snapshot.value;
+      if(data != null){
+        updateGamestate(data);
+      }
+    });
+
+    refGameState.onDisconnect().set({"playing" : false});
     refMe.onDisconnect().remove();
 
   }
@@ -55,7 +70,7 @@ class FirebaseConnection with ChangeNotifier {
   void populateMarkers(){
     List<Marker> newUserMarkers = [];
     _playerPositions.forEach((key, value) {
-      if(key != value){
+      if(key != id){
         Marker newMarker = Marker(
           point: LatLng(value["latitude"] ?? 0, value["longitude"] ?? 0), //User marker
           width: 20,
@@ -71,6 +86,19 @@ class FirebaseConnection with ChangeNotifier {
       }
     });
     _userMarkers = newUserMarkers;
+  }
+
+  void updateGamestate(Object data) {
+    Map<String, dynamic> GameStateMap = Map<String, dynamic>.from(data as Map);
+    playing = GameStateMap["playing"];
+    //goalIndex = GameStateMap["goalIndex"];
+
+    print("Playing: $playing");
+    notifyListeners();
+  }
+
+  void toggleGame(bool state) {
+    refGameState.set({"playing" : state});
   }
 
   Map<String, dynamic> get playerPositions => _playerPositions;

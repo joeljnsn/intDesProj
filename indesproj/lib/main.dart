@@ -72,6 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late bool _hasVibration;
 
   bool playing = false;
+  bool started = false;
 
   int score = 0;
   bool movedLastRedLight = false;
@@ -212,11 +213,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initVibration() async {
     bool? checkVibration = await Vibration.hasVibrator();
     _hasVibration = checkVibration ?? false;
+
   }
 
   void gameStateTimer() {
     Provider.of<FirebaseConnection>(context, listen: false)
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude);
+    started = true;
     _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
@@ -231,10 +234,10 @@ class _MyHomePageState extends State<MyHomePage> {
     checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
-        () {
-      eyeOpened = !eyeOpened;
-      gameStateTimer();
-    });
+            () {
+          eyeOpened = !eyeOpened;
+          gameStateTimer();
+        });
   }
 
   void vibrationTimer(int vibDuration) {
@@ -328,6 +331,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    playing = Provider.of<FirebaseConnection>(context, listen: false).playing;
+
+    if(playing && !started){
+      gameStateTimer();
+    } else if (!playing && started) {
+      _timer.cancel();
+      _vibrationTimer.cancel();
+      started = false;
+      eyeOpened = true;
+      movedLastRedLight = false;
+      goToStart = false;
+      score = 0;
+    }
+
     return Scaffold(
       backgroundColor: Colors.blueGrey,
       body: Container(
@@ -393,8 +410,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       onPressed: () {
                         if (true) {
-                          gameStateTimer();
                           setState(() {
+                            Provider.of<FirebaseConnection>(context, listen: false).toggleGame(true);
                             playing = true;
                             score = 0;
                           });
