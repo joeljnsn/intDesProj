@@ -14,10 +14,10 @@ import 'package:wakelock/wakelock.dart';
 import 'package:provider/provider.dart';
 
 void main() {
-  int x = Random().nextInt(3000);
+  int id = Random().nextInt(3000);
 
   runApp(ChangeNotifierProvider(
-      create: (context) => FirebaseConnection(id: "$x"),
+      create: (context) => FirebaseConnection(id: "$id"),
       lazy: false,
       child: const MyApp()));
 }
@@ -76,6 +76,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int score = 0;
   bool movedLastRedLight = false;
   bool goToStart = false;
+
+  List<Marker> _userMarkers = [];
 
   List<int> listOfDuration = [
     6,
@@ -266,6 +268,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return goalCoord;
   }
 
+  //Use LatLngBounds.contains instead?
   bool checkInGoal(LatLng userPos, List<LatLng> goalCoord) {
     return (((userPos.latitude < goalCoord[0].latitude) &&
             (userPos.longitude < goalCoord[0].longitude)) &&
@@ -292,19 +295,17 @@ class _MyHomePageState extends State<MyHomePage> {
           //userAgentPackageName: 'com.example.app',
         ),
         MarkerLayer(
-          markers: [
-            Marker(
-              point: LatLng(_markerLat, _markerLng), //User marker
-              width: 20,
-              height: 20,
-              builder: (context) => Container(
-                decoration: BoxDecoration(
-                    color: Colors.lightBlue,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 6)),
-              ),
+          markers: [Marker(
+            point: LatLng(_markerLat, _markerLng), //User marker
+            width: 20,
+            height: 20,
+            builder: (context) => Container(
+            decoration: BoxDecoration(
+            color: Colors.blue,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 6)),
             ),
-          ],
+          )] + Provider.of<FirebaseConnection>(context).userMarkers,
         ),
         PolygonLayer(
           polygonCulling: false,
