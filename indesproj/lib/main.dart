@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:indesproj/end.dart';
+import 'package:indesproj/firebase_communication.dart';
 import 'package:indesproj/start.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -68,12 +69,34 @@ class _MyHomePageState extends State<MyHomePage> {
   bool movedLastRedLight = false;
   bool goToStart = false;
 
-  List<int> listOfDuration = [6, 6, 5, 7, 5, 5, 8, 6, 7, 5, 6, 9, 7, 5, 7, 8, 7, 5, 5];
+  List<int> listOfDuration = [
+    6,
+    6,
+    5,
+    7,
+    5,
+    5,
+    8,
+    6,
+    7,
+    5,
+    6,
+    9,
+    7,
+    5,
+    7,
+    8,
+    7,
+    5,
+    5
+  ];
 
   int iDur = 0;
 
   bool _checkForMovement = false;
   late Timer _checkForMovementTimer;
+
+  FirebaseConnection ourDatabase = FirebaseConnection();
 
   void initLocation() async {
     Location location = Location();
@@ -134,7 +157,10 @@ class _MyHomePageState extends State<MyHomePage> {
         aeZ = (event.z).abs();
         totalAe = aeX + aeY + aeZ;
 
-        if (totalAe > 2 && playing && _checkForMovement && (eyeOpened || movedLastRedLight)) {
+        if (totalAe > 2 &&
+            playing &&
+            _checkForMovement &&
+            (eyeOpened || movedLastRedLight)) {
           score++;
           if ((score >= 10) ||
               (score >= 5 && movedLastRedLight && !eyeOpened)) {
@@ -154,12 +180,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _goalCoordinates = goalCoordinates(LatLng(57.70671289922682, 11.941174781546744), 0.00015); //Set goalCoordinates.
+    _goalCoordinates = goalCoordinates(
+        LatLng(57.70680144781405, 11.941158728073676),
+        0.00015); //Set goalCoordinates.
 
-    _startZoneCoordinates = goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
+    _startZoneCoordinates =
+        goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
 
     initVibration();
-
+    ourDatabase.initConnection();
     //gameStateTimer();
     super.initState();
   }
@@ -201,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void vibrationTimer(int vibDuration) {
     _vibrationTimer = Timer(Duration(seconds: vibDuration), () {
       if (_hasVibration) {
-        if(!movedLastRedLight){
+        if (!movedLastRedLight) {
           if (!eyeOpened) {
             //closed -> open.
             Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
@@ -348,8 +377,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                       fontSize: 100, color: Colors.amber)))))
                   : TextButton(
                       style: ButtonStyle(
-                        foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
-                        backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
+                        foregroundColor:
+                            MaterialStateProperty.all<Color>(Colors.amber),
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.white30),
                       ),
                       onPressed: () {
                         if (inStart) {
@@ -359,6 +390,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             score = 0;
                           });
                         } else {
+                          ourDatabase.addToDatabase();
                           const snackbar = SnackBar(
                             content: Text(
                                 "Cannot start game when not in starting zone."),
@@ -366,7 +398,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           ScaffoldMessenger.of(context).showSnackBar(snackbar);
                         }
                       },
-                      child: const Text('Start Game', style: TextStyle(fontSize: 18)),
+                      child: const Text('Start Game',
+                          style: TextStyle(fontSize: 18)),
                     ),
               /*Text(
                 "Score: $score",
