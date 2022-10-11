@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "960662580539",
+    "firebase_url": "https://intdesproj-fa3ee-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "intdesproj-fa3ee",
     "storage_bucket": "intdesproj-fa3ee.appspot.com"
   },
@@ -29,6 +30,13 @@
             {
               "client_id": "960662580539-cjculllts20i7bhm7i6hv07g7ht3krb6.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "960662580539-m0mrcv10p4tln7afgv8sq63ivmdg11gq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.indesproj"
+              }
             }
           ]
         }
