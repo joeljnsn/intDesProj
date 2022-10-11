@@ -295,7 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
           //userAgentPackageName: 'com.example.app',
         ),
         MarkerLayer(
-          markers: [Marker(
+          markers: Provider.of<FirebaseConnection>(context).userMarkers + [Marker(
             point: LatLng(_markerLat, _markerLng), //User marker
             width: 20,
             height: 20,
@@ -305,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 6)),
             ),
-          )] + Provider.of<FirebaseConnection>(context).userMarkers,
+          )],
         ),
         PolygonLayer(
           polygonCulling: false,
