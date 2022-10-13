@@ -20,7 +20,7 @@ class FirebaseConnection with ChangeNotifier {
   String id = "";
 
   bool playing = false;
-  int goalIndex = 0;
+  int currentGoalIndex = 0;
 
   FirebaseConnection({required this.id}) {
     initConnection();
@@ -34,7 +34,10 @@ class FirebaseConnection with ChangeNotifier {
     ref = FirebaseDatabase.instance.ref();
 
     refMe = FirebaseDatabase.instance.ref("Users/$id");
+
     refUsers = FirebaseDatabase.instance.ref("Users");
+
+    refUsers.remove();
 
     refUsers.onValue.listen((DatabaseEvent event) {
       final data = event.snapshot.value;
@@ -52,13 +55,13 @@ class FirebaseConnection with ChangeNotifier {
       }
     });
 
-    refGameState.onDisconnect().set({"playing" : false});
     refMe.onDisconnect().remove();
+    refGameState.onDisconnect().set({'playing' : false});
 
   }
 
   addToDatabase(double lat, double long) async {
-    await refMe.set({'latitude': lat, 'longitude': long});
+    await refMe.set({'latitude': lat, 'longitude': long, 'points' : 0});
   }
 
   void updatePlayers(Object data) {
@@ -88,10 +91,15 @@ class FirebaseConnection with ChangeNotifier {
     _userMarkers = newUserMarkers;
   }
 
+  void newGoal(int i, int points) {
+    refGameState.update({'goalIndex' : i});
+    refMe.update({'points' : points});
+  }
+
   void updateGamestate(Object data) {
     Map<String, dynamic> GameStateMap = Map<String, dynamic>.from(data as Map);
     playing = GameStateMap["playing"];
-    //goalIndex = GameStateMap["goalIndex"];
+    currentGoalIndex = GameStateMap["goalIndex"] ?? -1;
 
     print("Playing: $playing");
     notifyListeners();
