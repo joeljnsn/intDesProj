@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map/plugin_api.dart';
 import 'package:indesproj/firebase_communication.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+
+const double borderRadius = 25;
+BoxDecoration mapDecoration = BoxDecoration(
+  borderRadius: BorderRadius.circular(borderRadius),
+  boxShadow: const [
+    BoxShadow(color: Colors.green, spreadRadius: 4),
+  ],
+);
 
 class flutterMap extends StatelessWidget {
   const flutterMap({
@@ -29,56 +38,79 @@ class flutterMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlutterMap(
-      options: MapOptions(
-        center: LatLng(57.70630741457879,
-            11.940503180030372), // set map center to LatLng(0, 0),
-        zoom: 16,
-      ),
-      mapController: _mapController,
-      /*nonRotatedChildren: [
-        AttributionWidget.defaultWidget(
-          source: 'OpenStreetMap contributors',
-          onSourceTapped: null,
+    ImageProvider mapBackground =
+        const Image(image: AssetImage('Assets/MapBackground.png')).image;
+
+    return Container(
+      decoration: mapDecoration,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(borderRadius),
+          topRight: Radius.circular(borderRadius),
+          bottomRight: Radius.circular(borderRadius),
+          bottomLeft: Radius.circular(borderRadius),
         ),
-      ],*/
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          //userAgentPackageName: 'com.example.app',
-        ),
-        MarkerLayer(
-          markers: Provider.of<FirebaseConnection>(context).userMarkers +
-              [
-                Marker(
-                  point: LatLng(_markerLat, _markerLng), //User marker
-                  width: 20,
-                  height: 20,
-                  builder: (context) => Container(
-                    decoration: BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 6)),
-                  ),
-                )
-              ],
-        ),
-        PolygonLayer(
-          polygonCulling: false,
-          polygons: [
-            Polygon(
-              points: _goalCoordinates,
-              color: const Color.fromRGBO(0, 255, 0, .4),
-              isFilled: true,
+        child: FlutterMap(
+          options: MapOptions(
+            center: LatLng(57.70630741457879,
+                11.940503180030372), // set map center to LatLng(0, 0),
+            zoom: 17.5,
+            interactiveFlags: InteractiveFlag.none,
+          ),
+          mapController: _mapController,
+          /*nonRotatedChildren: [
+            AttributionWidget.defaultWidget(
+              source: 'OpenStreetMap contributors',
+              onSourceTapped: null,
             ),
-            Polygon(
-              points: _startZoneCoordinates,
-              color: const Color.fromRGBO(0, 0, 255, .4),
-              isFilled: true,
+          ],*/
+          children: [
+            // TileLayer(
+            //   urlTemplate: 'https://i.imgur.com/4VkGU6b.png',
+            //   //urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            //   //userAgentPackageName: 'com.example.app',
+            // ),
+            OverlayImageLayer(overlayImages: [
+              OverlayImage(
+                  bounds: LatLngBounds(
+                      LatLng(57.706450606571295, 11.939694715637232),
+                      LatLng(57.70606687482507, 11.941394818314182)),
+                  imageProvider: mapBackground)
+            ]),
+            MarkerLayer(
+              markers: Provider.of<FirebaseConnection>(context).userMarkers +
+                  [
+                    Marker(
+                      point: LatLng(_markerLat, _markerLng), //User marker
+                      width: 20,
+                      height: 20,
+                      builder: (context) => Container(
+                        decoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 6)),
+                      ),
+                    )
+                  ],
+            ),
+            PolygonLayer(
+              polygonCulling: false,
+              polygons: [
+                Polygon(
+                  points: _goalCoordinates,
+                  color: const Color.fromRGBO(0, 255, 0, .4),
+                  isFilled: true,
+                ),
+                Polygon(
+                  points: _startZoneCoordinates,
+                  color: const Color.fromRGBO(0, 0, 255, .4),
+                  isFilled: true,
+                ),
+              ],
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
