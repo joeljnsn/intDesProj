@@ -61,7 +61,7 @@ class FirebaseConnection with ChangeNotifier {
   }
 
   addToDatabase(double lat, double long) async {
-    await refMe.set({'latitude': lat, 'longitude': long, 'points' : 0});
+    await refMe.update({'latitude': lat, 'longitude': long});
   }
 
   void updatePlayers(Object data) {

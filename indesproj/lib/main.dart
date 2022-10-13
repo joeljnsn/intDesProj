@@ -86,10 +86,12 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentGoalIndex = 0;
   int points = 0;
 
+  //random for generating new goal zone
+  Random random = Random(5);
+
   List<LatLng> goalZones = [
     LatLng(57.70680144781405, 11.941158728073676),
     LatLng(57.70652503728925, 11.940347613243238),
-    LatLng(57.706229326292004, 11.940576232075628),
     LatLng(57.706023612872755, 11.940756720610546),
     LatLng(57.705805041084346, 11.94015509216082),
     LatLng(57.706333, 11.939523),
@@ -180,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //Set goal zone
     _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
-    _startZoneCoordinates = goalCoordinates(goalZones.last, 0.00015);
+    _startZoneCoordinates = goalCoordinates(LatLng(57.706229326292004, 11.940576232075628), 0.00015);
 
     initVibration();
 
@@ -278,22 +280,21 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void newGoalIndex(){
-    Random random = Random(_currentGoalIndex);
     int newIndex = random.nextInt(goalZones.length-1);
 
     while(_currentGoalIndex == newIndex){
       newIndex = random.nextInt(goalZones.length-1);
     }
 
-    _currentGoalIndex = newIndex;
-    Provider.of<FirebaseConnection>(context, listen: false).newGoal(_currentGoalIndex, points);
+    //_currentGoalIndex = newIndex;
+    Provider.of<FirebaseConnection>(context, listen: false).newGoal(newIndex, points);
   }
 
   void goalManager() {
     int dbCurrentGoal = Provider.of<FirebaseConnection>(context).currentGoalIndex;
     if((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)){
       setState(() {
-        _startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+        //_startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
         _currentGoalIndex = dbCurrentGoal;
         _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
@@ -303,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    playing = Provider.of<FirebaseConnection>(context, listen: false).playing;
+    playing = Provider.of<FirebaseConnection>(context).playing;
 
     checkIfPlaying();
 
