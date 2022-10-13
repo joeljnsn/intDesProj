@@ -121,10 +121,8 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _markerLat = currentLoc.latitude ?? 0;
         _markerLng = currentLoc.longitude ?? 0;
-        double currentZoom = _mapController.zoom;
         currentLatLng = LatLng(_markerLat, _markerLng);
-        _mapController.move(currentLatLng,
-            currentZoom); //Moves map to current location. Hard transition, do we want this? might be annoying
+        _mapController
 
         inGoal = checkInGoal(currentLatLng, _goalCoordinates);
         inStart = checkInGoal(currentLatLng, _startZoneCoordinates);
