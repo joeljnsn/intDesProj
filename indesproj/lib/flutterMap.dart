@@ -65,16 +65,17 @@ class flutterMap extends StatelessWidget {
             ),
           ],*/
           children: [
-            // TileLayer(
-            //   urlTemplate: 'https://i.imgur.com/4VkGU6b.png',
-            //   //urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-            //   //userAgentPackageName: 'com.example.app',
-            // ),
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              //userAgentPackageName: 'com.example.app',
+            ),
             OverlayImageLayer(overlayImages: [
               OverlayImage(
+                  opacity: 1,
                   bounds: LatLngBounds(
-                      LatLng(57.706450606571295, 11.939694715637232),
-                      LatLng(57.70606687482507, 11.941394818314182)),
+                      //Här vill vi ha mapController.bounds, men den är late
+                      LatLng(57.707322920657525, 11.942013102927401),
+                      LatLng(57.70529635967982, 11.938978529834595)),
                   imageProvider: mapBackground)
             ]),
             MarkerLayer(
