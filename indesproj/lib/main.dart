@@ -122,7 +122,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _markerLat = currentLoc.latitude ?? 0;
         _markerLng = currentLoc.longitude ?? 0;
         currentLatLng = LatLng(_markerLat, _markerLng);
-        _mapController
 
         inGoal = checkInGoal(currentLatLng, _goalCoordinates);
         inStart = checkInGoal(currentLatLng, _startZoneCoordinates);
