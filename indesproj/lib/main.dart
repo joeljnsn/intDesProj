@@ -205,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void gameStateTimer() {
     Provider.of<FirebaseConnection>(context, listen: false)
-        .addToDatabase(currentLatLng.latitude, currentLatLng.longitude);
+        .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
     started = true;
     _checkForMovement = false;
     score = 0;
@@ -276,6 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
       goToStart = false;
       score = 0;
       points = 0;
+      Provider.of<FirebaseConnection>(context, listen: false).addToDatabase(_markerLat, _markerLng, points);
     }
   }
 
@@ -401,18 +402,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: const Text('Start Game',
                           style: TextStyle(fontSize: 18)),
                     ),
-                    TextButton(
-                    style: ButtonStyle(
-                    foregroundColor:
-                    MaterialStateProperty.all<Color>(Colors.amber),
-                backgroundColor:
-                MaterialStateProperty.all<Color>(Colors.white30),
-              ),
-              onPressed: () {
-                points++;
-                newGoalIndex();
-              }, child: Text("Next goal / $points"),
-              )
             ],
           ),
         ),
