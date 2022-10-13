@@ -13,6 +13,8 @@ import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:provider/provider.dart';
 
+import 'flutterMap.dart';
+
 void main() {
   int id = Random().nextInt(3000);
 
@@ -213,7 +215,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initVibration() async {
     bool? checkVibration = await Vibration.hasVibrator();
     _hasVibration = checkVibration ?? false;
-
   }
 
   void gameStateTimer() {
@@ -234,10 +235,10 @@ class _MyHomePageState extends State<MyHomePage> {
     checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
-            () {
-          eyeOpened = !eyeOpened;
-          gameStateTimer();
-        });
+        () {
+      eyeOpened = !eyeOpened;
+      gameStateTimer();
+    });
   }
 
   void vibrationTimer(int vibDuration) {
@@ -279,61 +280,11 @@ class _MyHomePageState extends State<MyHomePage> {
             (userPos.longitude > goalCoord[2].longitude)));
   }
 
-  Widget flutterMap() {
-    return FlutterMap(
-      options: MapOptions(
-        center: LatLng(0, 0),
-        zoom: 16,
-      ),
-      mapController: _mapController,
-      /*nonRotatedChildren: [
-        AttributionWidget.defaultWidget(
-          source: 'OpenStreetMap contributors',
-          onSourceTapped: null,
-        ),
-      ],*/
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          //userAgentPackageName: 'com.example.app',
-        ),
-        MarkerLayer(
-          markers: Provider.of<FirebaseConnection>(context).userMarkers + [Marker(
-            point: LatLng(_markerLat, _markerLng), //User marker
-            width: 20,
-            height: 20,
-            builder: (context) => Container(
-            decoration: BoxDecoration(
-            color: Colors.blue,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 6)),
-            ),
-          )],
-        ),
-        PolygonLayer(
-          polygonCulling: false,
-          polygons: [
-            Polygon(
-              points: _goalCoordinates,
-              color: const Color.fromRGBO(0, 255, 0, .4),
-              isFilled: true,
-            ),
-            Polygon(
-              points: _startZoneCoordinates,
-              color: const Color.fromRGBO(0, 0, 255, .4),
-              isFilled: true,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     playing = Provider.of<FirebaseConnection>(context, listen: false).playing;
 
-    if(playing && !started){
+    if (playing && !started) {
       gameStateTimer();
     } else if (!playing && started) {
       _timer.cancel();
@@ -371,7 +322,13 @@ class _MyHomePageState extends State<MyHomePage> {
               SizedBox(
                   height:
                       (eyeOpened || movedLastRedLight || goToStart) ? 500 : 0,
-                  child: flutterMap()),
+                  child: flutterMap(
+                      mapController: _mapController,
+                      context: context,
+                      markerLat: _markerLat,
+                      markerLng: _markerLng,
+                      goalCoordinates: _goalCoordinates,
+                      startZoneCoordinates: _startZoneCoordinates)),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
                 height: 2,
@@ -411,7 +368,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       onPressed: () {
                         if (true) {
                           setState(() {
-                            Provider.of<FirebaseConnection>(context, listen: false).toggleGame(true);
+                            Provider.of<FirebaseConnection>(context,
+                                    listen: false)
+                                .toggleGame(true);
                             playing = true;
                             score = 0;
                           });
