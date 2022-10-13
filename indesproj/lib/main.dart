@@ -80,34 +80,20 @@ class _MyHomePageState extends State<MyHomePage> {
   bool movedLastRedLight = false;
   bool goToStart = false;
 
-  List<Marker> _userMarkers = [];
-
-  List<int> listOfDuration = [
-    6,
-    6,
-    5,
-    7,
-    5,
-    5,
-    8,
-    6,
-    7,
-    5,
-    6,
-    9,
-    7,
-    5,
-    7,
-    8,
-    7,
-    5,
-    5
-  ];
-
-  int iDur = 0;
-
   bool _checkForMovement = false;
   late Timer _checkForMovementTimer;
+
+  int _currentGoalIndex = 0;
+  int points = 0;
+
+  List<LatLng> goalZones = [
+    LatLng(57.70680144781405, 11.941158728073676),
+    LatLng(57.70652503728925, 11.940347613243238),
+    LatLng(57.706229326292004, 11.940576232075628),
+    LatLng(57.706023612872755, 11.940756720610546),
+    LatLng(57.705805041084346, 11.94015509216082),
+    LatLng(57.706333, 11.939523),
+  ];
 
   void initLocation() async {
     Location location = Location();
@@ -145,14 +131,13 @@ class _MyHomePageState extends State<MyHomePage> {
       });
 
       if (inGoal && !eyeOpened && !goToStart) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => EndPage(score),
-          ),
-        );
+        points++;
+        newGoalIndex();
       }
 
       if (goToStart && inStart) {
+        score = 0;
+        movedLastRedLight = false;
         goToStart = false;
       }
     });
@@ -174,9 +159,11 @@ class _MyHomePageState extends State<MyHomePage> {
             (eyeOpened || movedLastRedLight)) {
           score++;
           if ((score >= 10) ||
-              (score >= 5 && movedLastRedLight && !eyeOpened)) {
+              (score > 5 && movedLastRedLight && eyeOpened)) {
             goToStart = true;
-          } else if (score >= 5) {
+            score = 0;
+            movedLastRedLight = false;
+          } else if (score >= 5 && score < 10) {
             movedLastRedLight = true;
           }
         }
@@ -191,12 +178,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _goalCoordinates = goalCoordinates(
-        LatLng(57.70680144781405, 11.941158728073676),
-        0.00015); //Set goalCoordinates.
+    _currentGoalIndex = Random(66).nextInt(goalZones.length-2);
 
-    _startZoneCoordinates =
-        goalCoordinates(LatLng(57.706333, 11.939523), 0.00015);
+    //Set goal zone
+    _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+
+    _startZoneCoordinates = goalCoordinates(goalZones.last, 0.00015);
 
     initVibration();
 
@@ -228,10 +215,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     _stopwatch.reset();
     _stopwatch.start();
-    _roundDuration = listOfDuration[iDur % listOfDuration.length];
-    iDur++;
-    //_roundDuration = Random().nextInt(6) + 4;
-    vibrationTimer(_roundDuration - 3);
+    _roundDuration = Random(42).nextInt(4) + 5;
+    vibrationTimer(_roundDuration - 2);
     checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
@@ -247,10 +232,10 @@ class _MyHomePageState extends State<MyHomePage> {
         if (!movedLastRedLight) {
           if (!eyeOpened) {
             //closed -> open.
-            Vibration.vibrate(pattern: [0, 500, 500, 500, 500, 1000]);
+            Vibration.vibrate(duration: 2000);
           } else {
             //open -> closed.
-            Vibration.vibrate(pattern: [1975, 125, 100, 800]);
+            Vibration.vibrate(pattern: [1750, 110, 30, 110]);
           }
         }
       }
@@ -280,10 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
             (userPos.longitude > goalCoord[2].longitude)));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    playing = Provider.of<FirebaseConnection>(context, listen: false).playing;
-
+  void checkIfPlaying() {
     if (playing && !started) {
       gameStateTimer();
     } else if (!playing && started) {
@@ -294,7 +276,43 @@ class _MyHomePageState extends State<MyHomePage> {
       movedLastRedLight = false;
       goToStart = false;
       score = 0;
+      points = 0;
     }
+  }
+
+  void newGoalIndex(){
+    Random random = Random(_currentGoalIndex);
+    int newIndex = random.nextInt(goalZones.length-1);
+
+    while(_currentGoalIndex == newIndex){
+      newIndex = random.nextInt(goalZones.length-1);
+    }
+
+    _currentGoalIndex = newIndex;
+    Provider.of<FirebaseConnection>(context, listen: false).newGoal(_currentGoalIndex, points);
+  }
+
+  void goalManager() {
+    int dbCurrentGoal = Provider.of<FirebaseConnection>(context).currentGoalIndex;
+    if((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)){
+      setState(() {
+        _startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+
+        _currentGoalIndex = dbCurrentGoal;
+        _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    playing = Provider.of<FirebaseConnection>(context, listen: false).playing;
+
+    checkIfPlaying();
+
+    bool dontMove = eyeOpened || movedLastRedLight;
+
+    goalManager();
 
     return Scaffold(
       backgroundColor: Colors.blueGrey,
@@ -321,7 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
               SizedBox(
                   height:
-                      (eyeOpened || movedLastRedLight || goToStart) ? 500 : 0,
+                      (dontMove || goToStart) ? 500 : 0,
                   child: flutterMap(
                       mapController: _mapController,
                       context: context,
@@ -335,14 +353,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 200,
                 color: Colors.white,
               ),
-              (eyeOpened || movedLastRedLight)
+              dontMove
                   ? AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       height: 20,
                       width: totalAe * 100,
                       color: Colors.amber,
                     )
-                  : Container(),
+                  : Container(child: Text('$points'),),
               playing
                   ? goToStart
                       ? const Text("GO TO START",
@@ -385,14 +403,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: const Text('Start Game',
                           style: TextStyle(fontSize: 18)),
                     ),
-              /*Text(
-                "Score: $score",
-                style: const TextStyle(color: Colors.white),
+                    TextButton(
+                    style: ButtonStyle(
+                    foregroundColor:
+                    MaterialStateProperty.all<Color>(Colors.amber),
+                backgroundColor:
+                MaterialStateProperty.all<Color>(Colors.white30),
               ),
-              Text(
-                "At goal: $inGoal",
-                style: const TextStyle(color: Colors.white),
-              ),*/
+              onPressed: () {
+                points++;
+                newGoalIndex();
+              }, child: Text("Next goal / $points"),
+              )
             ],
           ),
         ),
