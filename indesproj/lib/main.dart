@@ -86,12 +86,14 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentGoalIndex = 0;
   int points = 0;
 
-  //random for generating new goal zone
-  Random random = Random(5);
+  List<LatLng> _crystalCoordinates = [];
 
-  bool powerUp = false;
   bool invisibilityQueued = false;
   bool invisibilityActivated = false;
+  bool crystalballActivated = false;
+
+  //random for new goal index
+  Random random = Random(5);
 
   List<LatLng> goalZones = [
     LatLng(57.70680144781405, 11.941158728073676),
@@ -135,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (inGoal && !eyeOpened && !goToStart) {
         points++;
-        newGoalIndex();
+        setNewGoalIndex();
       }
 
       if (goToStart && inStart) {
@@ -181,12 +183,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _currentGoalIndex = Random(66).nextInt(goalZones.length-2);
+    //_currentGoalIndex = Random(66).nextInt(goalZones.length-2);
 
     //Set goal zone
     _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
     _startZoneCoordinates = goalCoordinates(LatLng(57.706229326292004, 11.940576232075628), 0.00015);
+
+    _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
 
     initVibration();
 
@@ -211,7 +215,6 @@ class _MyHomePageState extends State<MyHomePage> {
     Provider.of<FirebaseConnection>(context, listen: false)
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
     if(invisibilityActivated){
-      powerUp = false;
       invisibilityActivated = false;
     }
     started = true;
@@ -292,22 +295,17 @@ class _MyHomePageState extends State<MyHomePage> {
       goToStart = false;
       score = 0;
       points = 0;
-      powerUp = false;
       invisibilityQueued = false;
       invisibilityActivated = false;
+      crystalballActivated = false;
       Provider.of<FirebaseConnection>(context, listen: false).addToDatabase(_markerLat, _markerLng, points);
     }
   }
 
-  void newGoalIndex(){
-    int newIndex = random.nextInt(goalZones.length-1);
-
-    while(_currentGoalIndex == newIndex){
-      newIndex = random.nextInt(goalZones.length-1);
-    }
-
+  void setNewGoalIndex(){
     //_currentGoalIndex = newIndex;
-    Provider.of<FirebaseConnection>(context, listen: false).newGoal(newIndex, points);
+    int newGoalIndex = (_currentGoalIndex+1) % goalZones.length;
+    Provider.of<FirebaseConnection>(context, listen: false).newGoal((newGoalIndex), points);
   }
 
   void goalManager() {
@@ -316,17 +314,26 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         //_startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
+        if(crystalballActivated){
+          crystalballActivated = false;
+        }
+
         _currentGoalIndex = dbCurrentGoal;
         _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+        _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
       });
     }
   }
 
   void activateInvisibility() {
-    //Only one powerup at a time
-    if(!powerUp){
-      powerUp = true;
+    if(!(invisibilityActivated || invisibilityQueued)){
       invisibilityQueued = true;
+    }
+  }
+
+  void activateCrystalball() {
+    if(!crystalballActivated){
+      crystalballActivated = true;
     }
   }
 
@@ -372,7 +379,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       markerLat: _markerLat,
                       markerLng: _markerLng,
                       goalCoordinates: _goalCoordinates,
-                      startZoneCoordinates: _startZoneCoordinates)),
+                      startZoneCoordinates: _startZoneCoordinates,
+                      crystalCoordinates: crystalballActivated ? (_crystalCoordinates) : [])),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
                 height: 2,
@@ -437,8 +445,19 @@ class _MyHomePageState extends State<MyHomePage> {
                     MaterialStateProperty.all<Color>(Colors.white30),
                   ),
                   onPressed: () {
-                    activateInvisibility();
-                  }, child: Text("Activate p-u /Q: $invisibilityQueued A: $invisibilityActivated"),
+                    activateCrystalball();
+                  }, child: Text("Activate cb A: $crystalballActivated"),
+              ),
+              TextButton(
+                style: ButtonStyle(
+                  foregroundColor:
+                  MaterialStateProperty.all<Color>(Colors.amber),
+                  backgroundColor:
+                  MaterialStateProperty.all<Color>(Colors.white30),
+                ),
+                onPressed: () {
+                  setNewGoalIndex();
+                }, child: Text("Next goal"),
               )
             ],
           ),
