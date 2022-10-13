@@ -89,6 +89,10 @@ class _MyHomePageState extends State<MyHomePage> {
   //random for generating new goal zone
   Random random = Random(5);
 
+  bool powerUp = false;
+  bool invisibilityQueued = false;
+  bool invisibilityActivated = false;
+
   List<LatLng> goalZones = [
     LatLng(57.70680144781405, 11.941158728073676),
     LatLng(57.70652503728925, 11.940347613243238),
@@ -206,11 +210,19 @@ class _MyHomePageState extends State<MyHomePage> {
   void gameStateTimer() {
     Provider.of<FirebaseConnection>(context, listen: false)
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
+    if(invisibilityActivated){
+      powerUp = false;
+      invisibilityActivated = false;
+    }
     started = true;
     _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
       movedLastRedLight = false;
+      if(invisibilityQueued){
+        invisibilityQueued = false;
+        invisibilityActivated = true;
+      }
     }
     _stopwatch.reset();
     _stopwatch.start();
@@ -231,7 +243,11 @@ class _MyHomePageState extends State<MyHomePage> {
         if (!movedLastRedLight) {
           if (!eyeOpened) {
             //closed -> open.
-            Vibration.vibrate(duration: 2000);
+
+            //check if invi is queued
+            if(!invisibilityQueued){
+              Vibration.vibrate(duration: 2000);
+            }
           } else {
             //open -> closed.
             Vibration.vibrate(pattern: [1750, 110, 30, 110]);
@@ -276,6 +292,9 @@ class _MyHomePageState extends State<MyHomePage> {
       goToStart = false;
       score = 0;
       points = 0;
+      powerUp = false;
+      invisibilityQueued = false;
+      invisibilityActivated = false;
       Provider.of<FirebaseConnection>(context, listen: false).addToDatabase(_markerLat, _markerLng, points);
     }
   }
@@ -303,13 +322,21 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void activateInvisibility() {
+    //Only one powerup at a time
+    if(!powerUp){
+      powerUp = true;
+      invisibilityQueued = true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     playing = Provider.of<FirebaseConnection>(context).playing;
 
     checkIfPlaying();
 
-    bool dontMove = eyeOpened || movedLastRedLight;
+    bool dontMove = (eyeOpened && !invisibilityActivated) || movedLastRedLight;
 
     goalManager();
 
@@ -359,7 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       width: totalAe * 100,
                       color: Colors.amber,
                     )
-                  : Container(child: Text('$points'),),
+                  : Container(),
               playing
                   ? goToStart
                       ? const Text("GO TO START",
@@ -368,7 +395,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ? const Text("ILLEGAL MOVE",
                               style:
                                   TextStyle(fontSize: 36, color: Colors.amber))
-                          : (eyeOpened
+                          : ((dontMove)
                               ? const Text("DO NOT MOVE",
                                   style: TextStyle(
                                       fontSize: 36, color: Colors.amber))
@@ -402,6 +429,17 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: const Text('Start Game',
                           style: TextStyle(fontSize: 18)),
                     ),
+                    TextButton(
+                    style: ButtonStyle(
+                    foregroundColor:
+                    MaterialStateProperty.all<Color>(Colors.amber),
+                    backgroundColor:
+                    MaterialStateProperty.all<Color>(Colors.white30),
+                  ),
+                  onPressed: () {
+                    activateInvisibility();
+                  }, child: Text("Activate p-u /Q: $invisibilityQueued A: $invisibilityActivated"),
+              )
             ],
           ),
         ),

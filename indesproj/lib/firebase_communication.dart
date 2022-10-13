@@ -101,7 +101,6 @@ class FirebaseConnection with ChangeNotifier {
     playing = GameStateMap["playing"];
     currentGoalIndex = GameStateMap["goalIndex"] ?? -1;
 
-    print("Playing: $playing");
     notifyListeners();
   }
 
