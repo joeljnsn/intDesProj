@@ -23,12 +23,14 @@ class flutterMap extends StatelessWidget {
     required List<LatLng> goalCoordinates,
     required List<LatLng> startZoneCoordinates,
     required List<LatLng> crystalCoordinates,
+    required List<List<LatLng>> powerUpCoordinates,
   })  : _mapController = mapController,
         _markerLat = markerLat,
         _markerLng = markerLng,
         _goalCoordinates = goalCoordinates,
         _startZoneCoordinates = startZoneCoordinates,
         _crystalCoordinates = crystalCoordinates,
+        _powerUpCoordinates = powerUpCoordinates,
         super(key: key);
 
   final MapController _mapController;
@@ -38,11 +40,24 @@ class flutterMap extends StatelessWidget {
   final List<LatLng> _goalCoordinates;
   final List<LatLng> _startZoneCoordinates;
   final List<LatLng> _crystalCoordinates;
+  final List<List<LatLng>> _powerUpCoordinates;
 
   @override
   Widget build(BuildContext context) {
     ImageProvider mapBackground =
         const Image(image: AssetImage('Assets/MapBackground.png')).image;
+
+    List<Polygon> powerUpPolygons = [];
+
+    for(List<LatLng> powerUpCoordinate in _powerUpCoordinates){
+      powerUpPolygons.add(
+        Polygon(
+          points: powerUpCoordinate,
+          color: const Color.fromRGBO(123, 0, 255, 0.4),
+          isFilled: true,
+        )
+      );
+    }
 
     return Container(
       decoration: mapDecoration,
@@ -114,8 +129,8 @@ class flutterMap extends StatelessWidget {
                     points: _crystalCoordinates,
                     color: const Color.fromRGBO(255, 255, 0, .4),
                     isFilled: true,
-                )
-              ],
+                ),
+              ] + powerUpPolygons,
             ),
           ],
         ),

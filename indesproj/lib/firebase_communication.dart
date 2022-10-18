@@ -21,6 +21,7 @@ class FirebaseConnection with ChangeNotifier {
 
   bool playing = false;
   int currentGoalIndex = 0;
+  int powerUpIndex = 0;
 
   FirebaseConnection({required this.id}) {
     initConnection();
@@ -56,7 +57,7 @@ class FirebaseConnection with ChangeNotifier {
     });
 
     refMe.onDisconnect().remove();
-    refGameState.onDisconnect().set({'playing' : false});
+    refGameState.onDisconnect().set({'playing' : false, 'powerUpIndex' : 1});
 
   }
 
@@ -96,10 +97,15 @@ class FirebaseConnection with ChangeNotifier {
     refMe.update({'points' : points});
   }
 
+  void newPowerUpIndex(int i) {
+    refGameState.update({'powerUpIndex' : i});
+  }
+
   void updateGamestate(Object data) {
     Map<String, dynamic> GameStateMap = Map<String, dynamic>.from(data as Map);
     playing = GameStateMap["playing"];
     currentGoalIndex = GameStateMap["goalIndex"] ?? -1;
+    powerUpIndex = GameStateMap["powerUpIndex"] ?? -1;
 
     notifyListeners();
   }

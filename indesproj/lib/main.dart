@@ -92,16 +92,32 @@ class _MyHomePageState extends State<MyHomePage> {
   bool invisibilityActivated = false;
   bool crystalballActivated = false;
 
-  //random for new goal index
-  Random random = Random(5);
-
-  List<LatLng> goalZones = [
+  final List<LatLng> goalZones = [
     LatLng(57.70680144781405, 11.941158728073676),
     LatLng(57.70652503728925, 11.940347613243238),
     LatLng(57.706023612872755, 11.940756720610546),
     LatLng(57.705805041084346, 11.94015509216082),
     LatLng(57.706333, 11.939523),
   ];
+
+  final List<LatLng> _powerUpZones = [
+    LatLng(57.706333, 11.939523),
+    LatLng(57.706023612872755, 11.940756720610546),
+    LatLng(57.705805041084346, 11.94015509216082),
+  ];
+
+  List<List<LatLng>> _currentPowerUpCoordinates = [];
+
+  int inPowerUp = -1;
+  bool ableToPickUp = false;
+
+  //Users powerups 0 is invisibility, 1 is crystal ball
+  List<int> powerUps = [];
+
+  int amountOfPowerUps = 2;
+  int puIndex = 1;
+
+  Random random = Random(42);
 
   void initLocation() async {
     Location location = Location();
@@ -133,11 +149,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
         inGoal = checkInGoal(currentLatLng, _goalCoordinates);
         inStart = checkInGoal(currentLatLng, _startZoneCoordinates);
+        inPowerUp = checkInPowerUp(currentLatLng, _currentPowerUpCoordinates);
       });
 
       if (inGoal && !eyeOpened && !goToStart) {
         points++;
         setNewGoalIndex();
+      }
+
+      if ((inPowerUp != -1) && !eyeOpened && !goToStart) {
+        ableToPickUp = true;
+      } else {
+        ableToPickUp = false;
       }
 
       if (goToStart && inStart) {
@@ -192,6 +215,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
 
+    for(int i = 0; i < amountOfPowerUps; i++){
+      _currentPowerUpCoordinates.add(goalCoordinates(_powerUpZones[i], 0.00015/2));
+    }
+
     initVibration();
 
     //gameStateTimer();
@@ -229,7 +256,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     _stopwatch.reset();
     _stopwatch.start();
-    _roundDuration = Random(42).nextInt(4) + 5;
+    _roundDuration = random.nextInt(5) + 5;
     vibrationTimer(_roundDuration - 2);
     checkForMovementTimer(1);
     _timer = Timer(
@@ -281,6 +308,15 @@ class _MyHomePageState extends State<MyHomePage> {
             (userPos.longitude < goalCoord[0].longitude)) &&
         ((userPos.latitude > goalCoord[2].latitude) &&
             (userPos.longitude > goalCoord[2].longitude)));
+  }
+
+  int checkInPowerUp(LatLng userPos, List<List<LatLng>> powerUpCoords) {
+    for(int i = 0; i < powerUpCoords.length; i++) {
+      if(checkInGoal(userPos, powerUpCoords[i])){
+        return i;
+      }
+    }
+    return -1;
   }
 
   void checkIfPlaying() {
@@ -337,6 +373,71 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void pickUpPowerUp(int powerUpIndex){
+    if(powerUps.length < 2){
+      if(powerUpIndex != -1){
+        powerUps.add(random.nextInt(2));
+        _currentPowerUpCoordinates.removeAt(powerUpIndex);
+        Provider.of<FirebaseConnection>(context, listen: false).newPowerUpIndex(puIndex+1);
+      }
+    }
+  }
+
+  void powerUpManager() {
+    int dbPowerUp = Provider.of<FirebaseConnection>(context).powerUpIndex;
+    if((dbPowerUp != -1) && (dbPowerUp != puIndex)){
+      setState(() {
+        puIndex = dbPowerUp;
+        if(_currentPowerUpCoordinates.length < amountOfPowerUps){
+          _currentPowerUpCoordinates.add(goalCoordinates((_powerUpZones[puIndex%_powerUpZones.length]), 0.00015/2));
+        }
+      });
+    }
+  }
+
+  Widget powerUpButtons() {
+    return Row(
+        children: <Widget>[
+          TextButton(
+          style: ButtonStyle(
+              foregroundColor:
+              MaterialStateProperty.all<Color>(Colors.amber),
+              backgroundColor:
+              MaterialStateProperty.all<Color>(Colors.white30),
+          ),
+            onPressed: () {
+              if (powerUps.length > 0) {
+                if((powerUps[0] == 0)) {
+                  activateInvisibility();
+                } else {
+                  activateCrystalball();
+                }
+              }
+            },
+            child: (powerUps.length > 0) ? (powerUps[0] == 0) ? Text("invis") : Text("crystal") : Text("No power up"),
+          ),
+          TextButton(
+            style: ButtonStyle(
+              foregroundColor:
+              MaterialStateProperty.all<Color>(Colors.amber),
+              backgroundColor:
+              MaterialStateProperty.all<Color>(Colors.white30),
+            ),
+            onPressed: () {
+              if (powerUps.length > 1) {
+                if((powerUps[1] == 0)) {
+                  activateInvisibility();
+                } else {
+                  activateCrystalball();
+                }
+              }
+            },
+            child: (powerUps.length > 1) ? (powerUps[1] == 0) ? Text("invis") : Text("crystal") : Text("No power up2"),
+          ),
+        ]
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     playing = Provider.of<FirebaseConnection>(context).playing;
@@ -346,6 +447,8 @@ class _MyHomePageState extends State<MyHomePage> {
     bool dontMove = (eyeOpened && !invisibilityActivated) || movedLastRedLight;
 
     goalManager();
+
+    powerUpManager();
 
     return Scaffold(
       backgroundColor: Colors.blueGrey,
@@ -380,7 +483,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       markerLng: _markerLng,
                       goalCoordinates: _goalCoordinates,
                       startZoneCoordinates: _startZoneCoordinates,
-                      crystalCoordinates: crystalballActivated ? (_crystalCoordinates) : [])),
+                      crystalCoordinates: crystalballActivated ? (_crystalCoordinates) : [],
+                      powerUpCoordinates: _currentPowerUpCoordinates),),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
                 height: 2,
@@ -437,7 +541,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: const Text('Start Game',
                           style: TextStyle(fontSize: 18)),
                     ),
-                    TextButton(
+              (inPowerUp != -1) ? TextButton(
                     style: ButtonStyle(
                     foregroundColor:
                     MaterialStateProperty.all<Color>(Colors.amber),
@@ -445,20 +549,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     MaterialStateProperty.all<Color>(Colors.white30),
                   ),
                   onPressed: () {
-                    activateCrystalball();
-                  }, child: Text("Activate cb A: $crystalballActivated"),
-              ),
-              TextButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                  MaterialStateProperty.all<Color>(Colors.amber),
-                  backgroundColor:
-                  MaterialStateProperty.all<Color>(Colors.white30),
-                ),
-                onPressed: () {
-                  setNewGoalIndex();
-                }, child: Text("Next goal"),
-              )
+                    pickUpPowerUp(inPowerUp);
+                  }, child: Text("Pick up powerUp"),
+              ) : Container(),
+              powerUpButtons()
             ],
           ),
         ),
