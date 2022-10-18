@@ -186,7 +186,8 @@ class _MyHomePageState extends State<MyHomePage> {
             _checkForMovement &&
             (eyeOpened || movedLastRedLight)) {
           score++;
-          if ((score >= 10) || (score > 5 && movedLastRedLight && eyeOpened)) {
+          if ((score >= 10) ||
+              (score > 5 && movedLastRedLight && eyeOpened)) {
             goToStart = true;
             score = 0;
             movedLastRedLight = false;
@@ -205,19 +206,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    //_currentGoalIndex = Random(66).nextInt(goalZones.length - 2);
+    //_currentGoalIndex = Random(66).nextInt(goalZones.length-2);
 
     //Set goal zone
     _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
-    _startZoneCoordinates = goalCoordinates(
-        LatLng(57.706229326292004, 11.940576232075628), 0.00015);
+    _startZoneCoordinates = goalCoordinates(LatLng(57.706229326292004, 11.940576232075628), 0.00015);
 
-    _crystalCoordinates = goalCoordinates(
-        goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
-
-    _crystalCoordinates = goalCoordinates(
-        goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
+    _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
 
     for(int i = 0; i < amountOfPowerUps; i++){
       _currentPowerUpCoordinates.add(goalCoordinates(_powerUpZones[i], 0.00015/2));
@@ -245,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void gameStateTimer() {
     Provider.of<FirebaseConnection>(context, listen: false)
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
-    if (invisibilityActivated) {
+    if(invisibilityActivated){
       invisibilityActivated = false;
     }
     started = true;
@@ -253,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
     score = 0;
     if (eyeOpened) {
       movedLastRedLight = false;
-      if (invisibilityQueued) {
+      if(invisibilityQueued){
         invisibilityQueued = false;
         invisibilityActivated = true;
       }
@@ -265,10 +261,10 @@ class _MyHomePageState extends State<MyHomePage> {
     checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
-        () {
-      eyeOpened = !eyeOpened;
-      gameStateTimer();
-    });
+            () {
+          eyeOpened = !eyeOpened;
+          gameStateTimer();
+        });
   }
 
   void vibrationTimer(int vibDuration) {
@@ -279,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
             //closed -> open.
 
             //check if invi is queued
-            if (!invisibilityQueued) {
+            if(!invisibilityQueued){
               Vibration.vibrate(duration: 2000);
             }
           } else {
@@ -309,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //Use LatLngBounds.contains instead?
   bool checkInGoal(LatLng userPos, List<LatLng> goalCoord) {
     return (((userPos.latitude < goalCoord[0].latitude) &&
-            (userPos.longitude < goalCoord[0].longitude)) &&
+        (userPos.longitude < goalCoord[0].longitude)) &&
         ((userPos.latitude > goalCoord[2].latitude) &&
             (userPos.longitude > goalCoord[2].longitude)));
   }
@@ -338,52 +334,41 @@ class _MyHomePageState extends State<MyHomePage> {
       invisibilityQueued = false;
       invisibilityActivated = false;
       crystalballActivated = false;
-      Provider.of<FirebaseConnection>(context, listen: false)
-          .addToDatabase(_markerLat, _markerLng, points);
+      Provider.of<FirebaseConnection>(context, listen: false).addToDatabase(_markerLat, _markerLng, points);
     }
   }
 
-  void newGoalIndex() {
-    int newIndex = random.nextInt(goalZones.length - 1);
-
-    while (_currentGoalIndex == newIndex) {
-      newIndex = random.nextInt(goalZones.length - 1);
-    }
-
+  void setNewGoalIndex(){
     //_currentGoalIndex = newIndex;
-    int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
-    Provider.of<FirebaseConnection>(context, listen: false)
-        .newGoal((newGoalIndex), points);
+    int newGoalIndex = (_currentGoalIndex+1) % goalZones.length;
+    Provider.of<FirebaseConnection>(context, listen: false).newGoal((newGoalIndex), points);
   }
 
   void goalManager() {
-    int dbCurrentGoal =
-        Provider.of<FirebaseConnection>(context).currentGoalIndex;
-    if ((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)) {
+    int dbCurrentGoal = Provider.of<FirebaseConnection>(context).currentGoalIndex;
+    if((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)){
       setState(() {
         //_startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
-        if (crystalballActivated) {
+        if(crystalballActivated){
           crystalballActivated = false;
         }
 
         _currentGoalIndex = dbCurrentGoal;
-        _goalCoordinates =
-            goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
-        _crystalCoordinates = goalCoordinates(
-            goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
+        _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+        _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
       });
     }
   }
 
   void activateInvisibility() {
-    if (!(invisibilityActivated || invisibilityQueued)) {
+    if(!(invisibilityActivated || invisibilityQueued)){
       invisibilityQueued = true;
     }
   }
 
   void activateCrystalball() {
-    if (!crystalballActivated) {
+    if(!crystalballActivated){
       crystalballActivated = true;
     }
   }
@@ -414,12 +399,12 @@ class _MyHomePageState extends State<MyHomePage> {
     return Row(
         children: <Widget>[
           TextButton(
-          style: ButtonStyle(
+            style: ButtonStyle(
               foregroundColor:
               MaterialStateProperty.all<Color>(Colors.amber),
               backgroundColor:
               MaterialStateProperty.all<Color>(Colors.white30),
-          ),
+            ),
             onPressed: () {
               if (powerUps.length > 0) {
                 if((powerUps[0] == 0)) {
@@ -466,25 +451,25 @@ class _MyHomePageState extends State<MyHomePage> {
     powerUpManager();
 
     return Stack(children: [
-      Image.asset("Assets/backGround_image.png",
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          fit: BoxFit.cover),
+        Image.asset("Assets/backGround_image.png",
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
+        fit: BoxFit.cover),
       Scaffold(
       backgroundColor: Colors.blueGrey,
       body: Container(
         color: goToStart
             ? Colors.blue
             : (movedLastRedLight
-                ? Colors.red
-                : (eyeOpened
-                    ? Colors.black
-                    : Color.fromRGBO(
-                        0,
-                        0,
-                        0,
-                        _stopwatch.elapsedMilliseconds /
-                            (_roundDuration * 1000)))),
+            ? Colors.red
+            : (eyeOpened
+            ? Colors.black
+            : Color.fromRGBO(
+            0,
+            0,
+            0,
+            _stopwatch.elapsedMilliseconds /
+                (_roundDuration * 1000)))),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
           child: Column(
@@ -494,17 +479,17 @@ class _MyHomePageState extends State<MyHomePage> {
               /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
               SizedBox(
-                  height:
-                      (dontMove || goToStart) ? 500 : 0,
-                  child: flutterMap(
-                      mapController: _mapController,
-                      context: context,
-                      markerLat: _markerLat,
-                      markerLng: _markerLng,
-                      goalCoordinates: _goalCoordinates,
-                      startZoneCoordinates: _startZoneCoordinates,
-                      crystalCoordinates: crystalballActivated ? (_crystalCoordinates) : [],
-                      powerUpCoordinates: _currentPowerUpCoordinates),),
+                height:
+                (dontMove || goToStart) ? 500 : 0,
+                child: flutterMap(
+                    mapController: _mapController,
+                    context: context,
+                    markerLat: _markerLat,
+                    markerLng: _markerLng,
+                    goalCoordinates: _goalCoordinates,
+                    startZoneCoordinates: _startZoneCoordinates,
+                    crystalCoordinates: crystalballActivated ? (_crystalCoordinates) : [],
+                    powerUpCoordinates: _currentPowerUpCoordinates),),
               Container(
                 margin: const EdgeInsets.only(top: 16.0),
                 height: 2,
@@ -513,64 +498,64 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               dontMove
                   ? AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      height: 20,
-                      width: totalAe * 100,
-                      color: Colors.amber,
-                    )
+                duration: const Duration(milliseconds: 200),
+                height: 20,
+                width: totalAe * 100,
+                color: Colors.amber,
+              )
                   : Container(),
               playing
                   ? goToStart
-                      ? const Text("GO TO START",
-                          style: TextStyle(fontSize: 36, color: Colors.amber))
-                      : ((movedLastRedLight
-                          ? const Text("ILLEGAL MOVE",
-                              style:
-                                  TextStyle(fontSize: 36, color: Colors.amber))
-                          : ((dontMove)
-                              ? const Text("DO NOT MOVE",
-                                  style: TextStyle(
-                                      fontSize: 36, color: Colors.amber))
-                              : const Text("MOVE",
-                                  style: TextStyle(
-                                      fontSize: 100, color: Colors.amber)))))
+                  ? const Text("GO TO START",
+                  style: TextStyle(fontSize: 36, color: Colors.amber))
+                  : ((movedLastRedLight
+                  ? const Text("ILLEGAL MOVE",
+                  style:
+                  TextStyle(fontSize: 36, color: Colors.amber))
+                  : ((dontMove)
+                  ? const Text("DO NOT MOVE",
+                  style: TextStyle(
+                      fontSize: 36, color: Colors.amber))
+                  : const Text("MOVE",
+                  style: TextStyle(
+                      fontSize: 100, color: Colors.amber)))))
                   : TextButton(
-                      style: ButtonStyle(
-                        foregroundColor:
-                            MaterialStateProperty.all<Color>(Colors.amber),
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.white30),
-                      ),
-                      onPressed: () {
-                        if (true) {
-                          setState(() {
-                            Provider.of<FirebaseConnection>(context,
-                                    listen: false)
-                                .toggleGame(true);
-                            playing = true;
-                            score = 0;
-                          });
-                        } else {
-                          const snackbar = SnackBar(
-                            content: Text(
-                                "Cannot start game when not in starting zone."),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(snackbar);
-                        }
-                      },
-                      child: const Text('Start Game',
-                          style: TextStyle(fontSize: 18)),
-                    ),
+                style: ButtonStyle(
+                  foregroundColor:
+                  MaterialStateProperty.all<Color>(Colors.amber),
+                  backgroundColor:
+                  MaterialStateProperty.all<Color>(Colors.white30),
+                ),
+                onPressed: () {
+                  if (true) {
+                    setState(() {
+                      Provider.of<FirebaseConnection>(context,
+                          listen: false)
+                          .toggleGame(true);
+                      playing = true;
+                      score = 0;
+                    });
+                  } else {
+                    const snackbar = SnackBar(
+                      content: Text(
+                          "Cannot start game when not in starting zone."),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackbar);
+                  }
+                },
+                child: const Text('Start Game',
+                    style: TextStyle(fontSize: 18)),
+              ),
               (inPowerUp != -1) ? TextButton(
-                    style: ButtonStyle(
-                    foregroundColor:
-                        MaterialStateProperty.all<Color>(Colors.amber),
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.white30),
-                  ),
-                  onPressed: () {
-                    pickUpPowerUp(inPowerUp);
-                  }, child: Text("Pick up powerUp"),
+                style: ButtonStyle(
+                  foregroundColor:
+                  MaterialStateProperty.all<Color>(Colors.amber),
+                  backgroundColor:
+                  MaterialStateProperty.all<Color>(Colors.white30),
+                ),
+                onPressed: () {
+                  pickUpPowerUp(inPowerUp);
+                }, child: Text("Pick up powerUp"),
               ) : Container(),
               powerUpButtons()
             ],
