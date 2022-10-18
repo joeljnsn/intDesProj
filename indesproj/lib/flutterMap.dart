@@ -22,11 +22,13 @@ class flutterMap extends StatelessWidget {
     required double markerLng,
     required List<LatLng> goalCoordinates,
     required List<LatLng> startZoneCoordinates,
+    required List<LatLng> crystalCoordinates,
   })  : _mapController = mapController,
         _markerLat = markerLat,
         _markerLng = markerLng,
         _goalCoordinates = goalCoordinates,
         _startZoneCoordinates = startZoneCoordinates,
+        _crystalCoordinates = crystalCoordinates,
         super(key: key);
 
   final MapController _mapController;
@@ -35,6 +37,7 @@ class flutterMap extends StatelessWidget {
   final double _markerLng;
   final List<LatLng> _goalCoordinates;
   final List<LatLng> _startZoneCoordinates;
+  final List<LatLng> _crystalCoordinates;
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +110,11 @@ class flutterMap extends StatelessWidget {
                   color: const Color.fromRGBO(0, 0, 255, .4),
                   isFilled: true,
                 ),
+                Polygon(
+                    points: _crystalCoordinates,
+                    color: const Color.fromRGBO(255, 255, 0, .4),
+                    isFilled: true,
+                )
               ],
             ),
           ],

@@ -60,8 +60,8 @@ class FirebaseConnection with ChangeNotifier {
 
   }
 
-  addToDatabase(double lat, double long) async {
-    await refMe.update({'latitude': lat, 'longitude': long});
+  addToDatabase(double lat, double long, int points) async {
+    await refMe.update({'latitude': lat, 'longitude': long, 'points' : points});
   }
 
   void updatePlayers(Object data) {
@@ -101,7 +101,6 @@ class FirebaseConnection with ChangeNotifier {
     playing = GameStateMap["playing"];
     currentGoalIndex = GameStateMap["goalIndex"] ?? -1;
 
-    print("Playing: $playing");
     notifyListeners();
   }
 

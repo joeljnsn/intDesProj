@@ -86,7 +86,13 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentGoalIndex = 0;
   int points = 0;
 
-  //random for generating new goal zone
+  List<LatLng> _crystalCoordinates = [];
+
+  bool invisibilityQueued = false;
+  bool invisibilityActivated = false;
+  bool crystalballActivated = false;
+
+  //random for new goal index
   Random random = Random(5);
 
   List<LatLng> goalZones = [
@@ -131,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (inGoal && !eyeOpened && !goToStart) {
         points++;
-        newGoalIndex();
+        setNewGoalIndex();
       }
 
       if (goToStart && inStart) {
@@ -176,13 +182,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _currentGoalIndex = Random(66).nextInt(goalZones.length - 2);
+    //_currentGoalIndex = Random(66).nextInt(goalZones.length - 2);
 
     //Set goal zone
     _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
     _startZoneCoordinates = goalCoordinates(
         LatLng(57.706229326292004, 11.940576232075628), 0.00015);
+
+    _crystalCoordinates = goalCoordinates(
+        goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
+
+    _crystalCoordinates = goalCoordinates(
+        goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
 
     initVibration();
 
@@ -205,12 +217,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void gameStateTimer() {
     Provider.of<FirebaseConnection>(context, listen: false)
-        .addToDatabase(currentLatLng.latitude, currentLatLng.longitude);
+        .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
+    if (invisibilityActivated) {
+      invisibilityActivated = false;
+    }
     started = true;
     _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
       movedLastRedLight = false;
+      if (invisibilityQueued) {
+        invisibilityQueued = false;
+        invisibilityActivated = true;
+      }
     }
     _stopwatch.reset();
     _stopwatch.start();
@@ -231,7 +250,11 @@ class _MyHomePageState extends State<MyHomePage> {
         if (!movedLastRedLight) {
           if (!eyeOpened) {
             //closed -> open.
-            Vibration.vibrate(duration: 2000);
+
+            //check if invi is queued
+            if (!invisibilityQueued) {
+              Vibration.vibrate(duration: 2000);
+            }
           } else {
             //open -> closed.
             Vibration.vibrate(pattern: [1750, 110, 30, 110]);
@@ -276,6 +299,11 @@ class _MyHomePageState extends State<MyHomePage> {
       goToStart = false;
       score = 0;
       points = 0;
+      invisibilityQueued = false;
+      invisibilityActivated = false;
+      crystalballActivated = false;
+      Provider.of<FirebaseConnection>(context, listen: false)
+          .addToDatabase(_markerLat, _markerLng, points);
     }
   }
 
@@ -287,8 +315,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     //_currentGoalIndex = newIndex;
+    int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
     Provider.of<FirebaseConnection>(context, listen: false)
-        .newGoal(newIndex, points);
+        .newGoal((newGoalIndex), points);
   }
 
   void goalManager() {
@@ -298,10 +327,28 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         //_startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
+        if (crystalballActivated) {
+          crystalballActivated = false;
+        }
+
         _currentGoalIndex = dbCurrentGoal;
         _goalCoordinates =
             goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+        _crystalCoordinates = goalCoordinates(
+            goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
       });
+    }
+  }
+
+  void activateInvisibility() {
+    if (!(invisibilityActivated || invisibilityQueued)) {
+      invisibilityQueued = true;
+    }
+  }
+
+  void activateCrystalball() {
+    if (!crystalballActivated) {
+      crystalballActivated = true;
     }
   }
 
@@ -311,7 +358,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     checkIfPlaying();
 
-    bool dontMove = eyeOpened || movedLastRedLight;
+    bool dontMove = (eyeOpened && !invisibilityActivated) || movedLastRedLight;
 
     goalManager();
 
@@ -352,7 +399,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         markerLat: _markerLat,
                         markerLng: _markerLng,
                         goalCoordinates: _goalCoordinates,
-                        startZoneCoordinates: _startZoneCoordinates)),
+                        startZoneCoordinates: _startZoneCoordinates,
+                        crystalCoordinates:
+                            crystalballActivated ? (_crystalCoordinates) : [])),
                 Container(
                   margin: const EdgeInsets.only(top: 16.0),
                   height: 2,
@@ -366,9 +415,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         width: totalAe * 100,
                         color: Colors.amber,
                       )
-                    : Container(
-                        child: Text('$points'),
-                      ),
+                    : Container(),
                 playing
                     ? goToStart
                         ? const Text("GO TO START",
@@ -377,7 +424,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ? const Text("ILLEGAL MOVE",
                                 style: TextStyle(
                                     fontSize: 36, color: Colors.amber))
-                            : (eyeOpened
+                            : ((dontMove)
                                 ? const Text("DO NOT MOVE",
                                     style: TextStyle(
                                         fontSize: 36, color: Colors.amber))
