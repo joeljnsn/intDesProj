@@ -527,7 +527,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   MaterialStateProperty.all<Color>(Colors.white30),
                 ),
                 onPressed: () {
-                  if (true) {
+                  if (inStart) {
                     setState(() {
                       Provider.of<FirebaseConnection>(context,
                           listen: false)
