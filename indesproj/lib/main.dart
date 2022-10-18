@@ -76,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool playing = false;
   bool started = false;
+  bool finished = false;
 
   int score = 0;
   bool movedLastRedLight = false;
@@ -336,6 +337,15 @@ class _MyHomePageState extends State<MyHomePage> {
       crystalballActivated = false;
       Provider.of<FirebaseConnection>(context, listen: false).addToDatabase(_markerLat, _markerLng, points);
     }
+
+    if(finished) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => EndPage(points),
+        ),
+      );
+    }
+
   }
 
   void setNewGoalIndex(){
@@ -346,11 +356,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
     if(points >= 3){
       player.play(AssetSource("sounds/win_screen.wav"));
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => EndPage(points),
-        ),
-      );
+
+      Provider.of<FirebaseConnection>(context, listen: false).endGame();
     } else {
       player.play(AssetSource("sounds/recive_point.mp3"));
     }
@@ -459,6 +466,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     playing = Provider.of<FirebaseConnection>(context).playing;
+    finished = Provider.of<FirebaseConnection>(context).finished;
 
     checkIfPlaying();
 
