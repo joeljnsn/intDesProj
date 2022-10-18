@@ -61,6 +61,11 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  fonts:
+    - family: Cooper Black
+      fonts:
+      - asset: Assets/Cooper Black Regular.ttf
+        style: regular
   assets:
     - Assets/MapBackground.png
     - Assets/backGround_image.png
