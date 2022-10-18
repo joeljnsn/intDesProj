@@ -184,10 +184,10 @@ class _MyHomePageState extends State<MyHomePage> {
         if (totalAe > 2 &&
             playing &&
             _checkForMovement &&
-            (eyeOpened || movedLastRedLight)) {
+            ((eyeOpened && !invisibilityActivated) || movedLastRedLight)) {
           score++;
           if ((score >= 10) ||
-              (score > 5 && movedLastRedLight && eyeOpened)) {
+              (score > 5 && movedLastRedLight && (eyeOpened && !invisibilityActivated))) {
             goToStart = true;
             score = 0;
             movedLastRedLight = false;
@@ -412,6 +412,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 } else {
                   activateCrystalball();
                 }
+                powerUps.removeAt(0);
               }
             },
             child: (powerUps.length > 0) ? (powerUps[0] == 0) ? Text("invis") : Text("crystal") : Text("No power up"),
@@ -430,6 +431,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 } else {
                   activateCrystalball();
                 }
+                powerUps.removeAt(1);
               }
             },
             child: (powerUps.length > 1) ? (powerUps[1] == 0) ? Text("invis") : Text("crystal") : Text("No power up2"),
