@@ -63,6 +63,7 @@ dev_dependencies:
 flutter:
   assets:
     - Assets/MapBackground.png
+    - Assets/backGround_image.png
     
 
   # The following line ensures that the Material Icons font is

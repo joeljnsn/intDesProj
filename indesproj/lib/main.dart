@@ -157,8 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
             _checkForMovement &&
             (eyeOpened || movedLastRedLight)) {
           score++;
-          if ((score >= 10) ||
-              (score > 5 && movedLastRedLight && eyeOpened)) {
+          if ((score >= 10) || (score > 5 && movedLastRedLight && eyeOpened)) {
             goToStart = true;
             score = 0;
             movedLastRedLight = false;
@@ -177,12 +176,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     initLocation();
 
-    _currentGoalIndex = Random(66).nextInt(goalZones.length-2);
+    _currentGoalIndex = Random(66).nextInt(goalZones.length - 2);
 
     //Set goal zone
     _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
-    _startZoneCoordinates = goalCoordinates(LatLng(57.706229326292004, 11.940576232075628), 0.00015);
+    _startZoneCoordinates = goalCoordinates(
+        LatLng(57.706229326292004, 11.940576232075628), 0.00015);
 
     initVibration();
 
@@ -279,25 +279,28 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void newGoalIndex(){
-    int newIndex = random.nextInt(goalZones.length-1);
+  void newGoalIndex() {
+    int newIndex = random.nextInt(goalZones.length - 1);
 
-    while(_currentGoalIndex == newIndex){
-      newIndex = random.nextInt(goalZones.length-1);
+    while (_currentGoalIndex == newIndex) {
+      newIndex = random.nextInt(goalZones.length - 1);
     }
 
     //_currentGoalIndex = newIndex;
-    Provider.of<FirebaseConnection>(context, listen: false).newGoal(newIndex, points);
+    Provider.of<FirebaseConnection>(context, listen: false)
+        .newGoal(newIndex, points);
   }
 
   void goalManager() {
-    int dbCurrentGoal = Provider.of<FirebaseConnection>(context).currentGoalIndex;
-    if((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)){
+    int dbCurrentGoal =
+        Provider.of<FirebaseConnection>(context).currentGoalIndex;
+    if ((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)) {
       setState(() {
         //_startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
         _currentGoalIndex = dbCurrentGoal;
-        _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+        _goalCoordinates =
+            goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
       });
     }
   }
@@ -312,111 +315,121 @@ class _MyHomePageState extends State<MyHomePage> {
 
     goalManager();
 
-    return Scaffold(
-      backgroundColor: Colors.blueGrey,
-      body: Container(
-        color: goToStart
-            ? Colors.blue
-            : (movedLastRedLight
-                ? Colors.red
-                : (eyeOpened
-                    ? Colors.black
-                    : Color.fromRGBO(
-                        0,
-                        0,
-                        0,
-                        _stopwatch.elapsedMilliseconds /
-                            (_roundDuration * 1000)))),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-              Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
-              SizedBox(
-                  height:
-                      (dontMove || goToStart) ? 500 : 0,
-                  child: flutterMap(
-                      mapController: _mapController,
-                      context: context,
-                      markerLat: _markerLat,
-                      markerLng: _markerLng,
-                      goalCoordinates: _goalCoordinates,
-                      startZoneCoordinates: _startZoneCoordinates)),
-              Container(
-                margin: const EdgeInsets.only(top: 16.0),
-                height: 2,
-                width: 200,
-                color: Colors.white,
-              ),
-              dontMove
-                  ? AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      height: 20,
-                      width: totalAe * 100,
-                      color: Colors.amber,
-                    )
-                  : Container(child: Text('$points'),),
-              playing
-                  ? goToStart
-                      ? const Text("GO TO START",
-                          style: TextStyle(fontSize: 36, color: Colors.amber))
-                      : ((movedLastRedLight
-                          ? const Text("ILLEGAL MOVE",
-                              style:
-                                  TextStyle(fontSize: 36, color: Colors.amber))
-                          : (eyeOpened
-                              ? const Text("DO NOT MOVE",
-                                  style: TextStyle(
-                                      fontSize: 36, color: Colors.amber))
-                              : const Text("MOVE",
-                                  style: TextStyle(
-                                      fontSize: 100, color: Colors.amber)))))
-                  : TextButton(
-                      style: ButtonStyle(
-                        foregroundColor:
-                            MaterialStateProperty.all<Color>(Colors.amber),
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.white30),
+    return Stack(children: [
+      Image.asset("Assets/backGround_image.png",
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          fit: BoxFit.cover),
+      Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          color: goToStart
+              ? Colors.blue
+              : (movedLastRedLight
+                  ? Colors.red
+                  : (eyeOpened
+                      ? Colors.transparent
+                      : Color.fromRGBO(
+                          0,
+                          0,
+                          0,
+                          _stopwatch.elapsedMilliseconds /
+                              (_roundDuration * 1000)))),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
+                SizedBox(
+                    height: (dontMove || goToStart) ? 500 : 0,
+                    child: flutterMap(
+                        mapController: _mapController,
+                        context: context,
+                        markerLat: _markerLat,
+                        markerLng: _markerLng,
+                        goalCoordinates: _goalCoordinates,
+                        startZoneCoordinates: _startZoneCoordinates)),
+                Container(
+                  margin: const EdgeInsets.only(top: 16.0),
+                  height: 2,
+                  width: 200,
+                  color: Colors.white,
+                ),
+                dontMove
+                    ? AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 20,
+                        width: totalAe * 100,
+                        color: Colors.amber,
+                      )
+                    : Container(
+                        child: Text('$points'),
                       ),
-                      onPressed: () {
-                        if (true) {
-                          setState(() {
-                            Provider.of<FirebaseConnection>(context,
-                                    listen: false)
-                                .toggleGame(true);
-                            playing = true;
-                            score = 0;
-                          });
-                        } else {
-                          const snackbar = SnackBar(
-                            content: Text(
-                                "Cannot start game when not in starting zone."),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(snackbar);
-                        }
-                      },
-                      child: const Text('Start Game',
-                          style: TextStyle(fontSize: 18)),
-                    ),
-                    TextButton(
-                    style: ButtonStyle(
+                playing
+                    ? goToStart
+                        ? const Text("GO TO START",
+                            style: TextStyle(fontSize: 36, color: Colors.amber))
+                        : ((movedLastRedLight
+                            ? const Text("ILLEGAL MOVE",
+                                style: TextStyle(
+                                    fontSize: 36, color: Colors.amber))
+                            : (eyeOpened
+                                ? const Text("DO NOT MOVE",
+                                    style: TextStyle(
+                                        fontSize: 36, color: Colors.amber))
+                                : const Text("MOVE",
+                                    style: TextStyle(
+                                        fontSize: 100, color: Colors.amber)))))
+                    : TextButton(
+                        style: ButtonStyle(
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.amber),
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white30),
+                        ),
+                        onPressed: () {
+                          if (true) {
+                            setState(() {
+                              Provider.of<FirebaseConnection>(context,
+                                      listen: false)
+                                  .toggleGame(true);
+                              playing = true;
+                              score = 0;
+                            });
+                          } else {
+                            const snackbar = SnackBar(
+                              content: Text(
+                                  "Cannot start game when not in starting zone."),
+                            );
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(snackbar);
+                          }
+                        },
+                        child: const Text('Start Game',
+                            style: TextStyle(fontSize: 18)),
+                      ),
+                TextButton(
+                  style: ButtonStyle(
                     foregroundColor:
-                    MaterialStateProperty.all<Color>(Colors.amber),
-                backgroundColor:
-                MaterialStateProperty.all<Color>(Colors.white30),
-              ),
-              onPressed: () {
-                points++;
-                newGoalIndex();
-              }, child: Text("Next goal / $points"),
-              )
-            ],
+                        MaterialStateProperty.all<Color>(Colors.amber),
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.white30),
+                  ),
+                  onPressed: () {
+                    points++;
+                    newGoalIndex();
+                  },
+                  child: Text("Next goal / $points"),
+                )
+              ],
+            ),
           ),
         ),
       ),
-    );
+    ]);
   }
 }

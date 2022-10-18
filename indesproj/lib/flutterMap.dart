@@ -9,7 +9,7 @@ const double borderRadius = 25;
 BoxDecoration mapDecoration = BoxDecoration(
   borderRadius: BorderRadius.circular(borderRadius),
   boxShadow: const [
-    BoxShadow(color: Colors.green, spreadRadius: 4),
+    BoxShadow(color: Colors.black, spreadRadius: 6),
   ],
 );
 
