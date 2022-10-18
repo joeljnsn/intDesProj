@@ -12,6 +12,7 @@ import 'package:location/location.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import 'flutterMap.dart';
 
@@ -114,10 +115,11 @@ class _MyHomePageState extends State<MyHomePage> {
   //Users powerups 0 is invisibility, 1 is crystal ball
   List<int> powerUps = [];
 
-  int amountOfPowerUps = 2;
-  int puIndex = 1;
+  List<int> puIndex = [0, 1];
 
   Random random = Random(42);
+
+  final player = AudioPlayer();
 
   void initLocation() async {
     Location location = Location();
@@ -152,11 +154,6 @@ class _MyHomePageState extends State<MyHomePage> {
         inPowerUp = checkInPowerUp(currentLatLng, _currentPowerUpCoordinates);
       });
 
-      if (inGoal && !eyeOpened && !goToStart) {
-        points++;
-        setNewGoalIndex();
-      }
-
       if ((inPowerUp != -1) && !eyeOpened && !goToStart) {
         ableToPickUp = true;
       } else {
@@ -189,9 +186,11 @@ class _MyHomePageState extends State<MyHomePage> {
           if ((score >= 10) ||
               (score > 5 && movedLastRedLight && (eyeOpened && !invisibilityActivated))) {
             goToStart = true;
+            player.play(AssetSource("sounds/go_back.wav"));
             score = 0;
             movedLastRedLight = false;
           } else if (score >= 5 && score < 10) {
+            player.play(AssetSource("sounds/strike.wav"));
             movedLastRedLight = true;
           }
         }
@@ -215,10 +214,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
 
-    for(int i = 0; i < amountOfPowerUps; i++){
-      _currentPowerUpCoordinates.add(goalCoordinates(_powerUpZones[i], 0.00015/2));
-    }
-
     initVibration();
 
     //gameStateTimer();
@@ -229,6 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _mapController.dispose();
     _timer.cancel();
+    player.dispose();
     Wakelock.disable();
     super.dispose();
   }
@@ -248,11 +244,14 @@ class _MyHomePageState extends State<MyHomePage> {
     _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
+      player.play(AssetSource("sounds/red_swap.wav"));
       movedLastRedLight = false;
       if(invisibilityQueued){
         invisibilityQueued = false;
         invisibilityActivated = true;
       }
+    } else {
+      player.play(AssetSource("sounds/green_phase.wav"));
     }
     _stopwatch.reset();
     _stopwatch.start();
@@ -270,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void vibrationTimer(int vibDuration) {
     _vibrationTimer = Timer(Duration(seconds: vibDuration), () {
       if (_hasVibration) {
-        if (!movedLastRedLight) {
+        if (!movedLastRedLight && !goToStart) {
           if (!eyeOpened) {
             //closed -> open.
 
@@ -321,6 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void checkIfPlaying() {
     if (playing && !started) {
+      player.play(AssetSource("sounds/start_game.wav"));
       gameStateTimer();
     } else if (!playing && started) {
       _timer.cancel();
@@ -340,8 +340,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void setNewGoalIndex(){
     //_currentGoalIndex = newIndex;
+    points++;
     int newGoalIndex = (_currentGoalIndex+1) % goalZones.length;
     Provider.of<FirebaseConnection>(context, listen: false).newGoal((newGoalIndex), points);
+
+    if(points >= 3){
+      player.play(AssetSource("sounds/win_screen.wav"));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => EndPage(points),
+        ),
+      );
+    } else {
+      player.play(AssetSource("sounds/recive_point.mp3"));
+    }
+
   }
 
   void goalManager() {
@@ -376,20 +389,21 @@ class _MyHomePageState extends State<MyHomePage> {
   void pickUpPowerUp(int powerUpIndex){
     if(powerUps.length < 2){
       if(powerUpIndex != -1){
+        player.play(AssetSource("sounds/pick_up_powerup.mp3"));
         powerUps.add(random.nextInt(2));
-        _currentPowerUpCoordinates.removeAt(powerUpIndex);
-        Provider.of<FirebaseConnection>(context, listen: false).newPowerUpIndex(puIndex+1);
+        Provider.of<FirebaseConnection>(context, listen: false).newPowerUpIndex(powerUpIndex);
       }
     }
   }
 
   void powerUpManager() {
-    int dbPowerUp = Provider.of<FirebaseConnection>(context).powerUpIndex;
-    if((dbPowerUp != -1) && (dbPowerUp != puIndex)){
+    List<int> dbPowerUp = Provider.of<FirebaseConnection>(context).powerUpIndex;
+    if((dbPowerUp != puIndex)){
       setState(() {
         puIndex = dbPowerUp;
-        if(_currentPowerUpCoordinates.length < amountOfPowerUps){
-          _currentPowerUpCoordinates.add(goalCoordinates((_powerUpZones[puIndex%_powerUpZones.length]), 0.00015/2));
+        _currentPowerUpCoordinates.clear();
+        for (int value in puIndex) {
+          _currentPowerUpCoordinates.add(goalCoordinates((_powerUpZones[value % _powerUpZones.length]), 0.00015/2));
         }
       });
     }
@@ -412,6 +426,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 } else {
                   activateCrystalball();
                 }
+                player.play(AssetSource("sounds/use_powerup.wav"));
                 powerUps.removeAt(0);
               }
             },
@@ -431,6 +446,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 } else {
                   activateCrystalball();
                 }
+                player.play(AssetSource("sounds/use_powerup.wav"));
                 powerUps.removeAt(1);
               }
             },
@@ -453,7 +469,7 @@ class _MyHomePageState extends State<MyHomePage> {
     powerUpManager();
 
     return Stack(children: [
-        Image.asset("Assets/backGround_image.png",
+        Image.asset("assets/backGround_image.png",
         height: MediaQuery.of(context).size.height,
         width: MediaQuery.of(context).size.width,
         fit: BoxFit.cover),
@@ -548,7 +564,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const Text('Start Game',
                     style: TextStyle(fontSize: 18)),
               ),
-              (inPowerUp != -1) ? TextButton(
+              ((inPowerUp != -1 && !dontMove && !goToStart)) ? TextButton(
                 style: ButtonStyle(
                   foregroundColor:
                   MaterialStateProperty.all<Color>(Colors.amber),
@@ -558,8 +574,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   pickUpPowerUp(inPowerUp);
                 }, child: Text("Pick up powerUp"),
-              ) : Container(),
-              powerUpButtons()
+              ) : ((inGoal && !dontMove && !goToStart)) ? TextButton(
+                style: ButtonStyle(
+                  foregroundColor:
+                  MaterialStateProperty.all<Color>(Colors.amber),
+                  backgroundColor:
+                  MaterialStateProperty.all<Color>(Colors.white30),
+                ),
+                onPressed: () {
+                  setNewGoalIndex();
+                }, child: Text("Goal!"),
+              ) : Text("Points: $points", style: const TextStyle(color: Colors.white),),
+              powerUpButtons(),
             ],
           ),
         ),

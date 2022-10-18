@@ -45,7 +45,7 @@ class flutterMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ImageProvider mapBackground =
-        const Image(image: AssetImage('Assets/MapBackground.png')).image;
+        const Image(image: AssetImage('assets/MapBackground.png')).image;
 
     List<Polygon> powerUpPolygons = [];
 

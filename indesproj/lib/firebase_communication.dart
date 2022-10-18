@@ -21,7 +21,7 @@ class FirebaseConnection with ChangeNotifier {
 
   bool playing = false;
   int currentGoalIndex = 0;
-  int powerUpIndex = 0;
+  List<int> powerUpIndex = [0, 1];
 
   FirebaseConnection({required this.id}) {
     initConnection();
@@ -57,7 +57,7 @@ class FirebaseConnection with ChangeNotifier {
     });
 
     refMe.onDisconnect().remove();
-    refGameState.onDisconnect().set({'playing' : false, 'powerUpIndex' : 1});
+    refGameState.onDisconnect().set({'playing' : false, 'powerUpIndex' : [0, 1]});
 
   }
 
@@ -98,14 +98,35 @@ class FirebaseConnection with ChangeNotifier {
   }
 
   void newPowerUpIndex(int i) {
-    refGameState.update({'powerUpIndex' : i});
+    int highest = 0;
+    List<int> newIndex = [];
+
+    for (int value in powerUpIndex) {
+      if(value != i){
+        newIndex.add(value);
+      }
+      if(value > highest){
+        highest = value;
+      }
+    }
+
+    newIndex.add(highest+1);
+    print(newIndex);
+
+    refGameState.update({'powerUpIndex' : newIndex});
   }
 
   void updateGamestate(Object data) {
     Map<String, dynamic> GameStateMap = Map<String, dynamic>.from(data as Map);
     playing = GameStateMap["playing"];
     currentGoalIndex = GameStateMap["goalIndex"] ?? -1;
-    powerUpIndex = GameStateMap["powerUpIndex"] ?? -1;
+    List<Object?> powerUpIndexObject = GameStateMap["powerUpIndex"] ?? [0, 1];
+
+    powerUpIndex = [];
+
+    powerUpIndexObject.forEach((element) {
+      powerUpIndex.add((element as int));
+    });
 
     notifyListeners();
   }

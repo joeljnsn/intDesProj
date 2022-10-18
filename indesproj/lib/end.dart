@@ -14,7 +14,7 @@ class EndPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text("Goal!!!", style: const TextStyle(color: Colors.white)),
+          Text("Goal!!! $time", style: const TextStyle(color: Colors.white)),
           TextButton(
             style: ButtonStyle(
               foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),

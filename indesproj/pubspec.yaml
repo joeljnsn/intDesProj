@@ -36,6 +36,7 @@ dependencies:
   akar_icons_flutter: 1.1.11
   wakelock: ^0.6.2
   vibration: ^1.7.5
+  audioplayers: ^1.1.1
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -62,8 +63,18 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - Assets/MapBackground.png
-    - Assets/backGround_image.png
+    - assets/MapBackground.png
+    - assets/backGround_image.png
+    - assets/sounds/go_back.wav
+    - assets/sounds/green_phase.wav
+    - assets/sounds/pick_up_powerup.mp3
+    - assets/sounds/recive_point.mp3
+    - assets/sounds/red_swap.wav
+    - assets/sounds/start_game.wav
+    - assets/sounds/strike.wav
+    - assets/sounds/tic_toc.mp3
+    - assets/sounds/use_powerup.wav
+    - assets/sounds/win_screen.wav
     
 
   # The following line ensures that the Material Icons font is
