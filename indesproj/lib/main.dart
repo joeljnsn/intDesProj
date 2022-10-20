@@ -13,6 +13,7 @@ import 'package:vibration/vibration.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'flutterMap.dart';
 
@@ -185,7 +186,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ((eyeOpened && !invisibilityActivated) || movedLastRedLight)) {
           score++;
           if ((score >= 10) ||
-              (score > 5 && movedLastRedLight && (eyeOpened && !invisibilityActivated))) {
+              (score > 5 &&
+                  movedLastRedLight &&
+                  (eyeOpened && !invisibilityActivated))) {
             goToStart = true;
             player.play(AssetSource("sounds/go_back.wav"));
             score = 0;
@@ -211,9 +214,11 @@ class _MyHomePageState extends State<MyHomePage> {
     //Set goal zone
     _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
-    _startZoneCoordinates = goalCoordinates(LatLng(57.706229326292004, 11.940576232075628), 0.00015);
+    _startZoneCoordinates = goalCoordinates(
+        LatLng(57.706229326292004, 11.940576232075628), 0.00015);
 
-    _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
+    _crystalCoordinates = goalCoordinates(
+        goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
 
     initVibration();
 
@@ -238,7 +243,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void gameStateTimer() {
     Provider.of<FirebaseConnection>(context, listen: false)
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
-    if(invisibilityActivated){
+    if (invisibilityActivated) {
       invisibilityActivated = false;
     }
     started = true;
@@ -247,7 +252,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (eyeOpened) {
       player.play(AssetSource("sounds/red_swap.wav"));
       movedLastRedLight = false;
-      if(invisibilityQueued){
+      if (invisibilityQueued) {
         invisibilityQueued = false;
         invisibilityActivated = true;
       }
@@ -261,10 +266,10 @@ class _MyHomePageState extends State<MyHomePage> {
     checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
-            () {
-          eyeOpened = !eyeOpened;
-          gameStateTimer();
-        });
+        () {
+      eyeOpened = !eyeOpened;
+      gameStateTimer();
+    });
   }
 
   void vibrationTimer(int vibDuration) {
@@ -275,7 +280,7 @@ class _MyHomePageState extends State<MyHomePage> {
             //closed -> open.
 
             //check if invi is queued
-            if(!invisibilityQueued){
+            if (!invisibilityQueued) {
               Vibration.vibrate(duration: 2000);
             }
           } else {
@@ -305,14 +310,14 @@ class _MyHomePageState extends State<MyHomePage> {
   //Use LatLngBounds.contains instead?
   bool checkInGoal(LatLng userPos, List<LatLng> goalCoord) {
     return (((userPos.latitude < goalCoord[0].latitude) &&
-        (userPos.longitude < goalCoord[0].longitude)) &&
+            (userPos.longitude < goalCoord[0].longitude)) &&
         ((userPos.latitude > goalCoord[2].latitude) &&
             (userPos.longitude > goalCoord[2].longitude)));
   }
 
   int checkInPowerUp(LatLng userPos, List<List<LatLng>> powerUpCoords) {
-    for(int i = 0; i < powerUpCoords.length; i++) {
-      if(checkInGoal(userPos, powerUpCoords[i])){
+    for (int i = 0; i < powerUpCoords.length; i++) {
+      if (checkInGoal(userPos, powerUpCoords[i])) {
         return i;
       }
     }
@@ -335,132 +340,139 @@ class _MyHomePageState extends State<MyHomePage> {
       invisibilityQueued = false;
       invisibilityActivated = false;
       crystalballActivated = false;
-      Provider.of<FirebaseConnection>(context, listen: false).addToDatabase(_markerLat, _markerLng, points);
+      Provider.of<FirebaseConnection>(context, listen: false)
+          .addToDatabase(_markerLat, _markerLng, points);
     }
 
-    if(finished) {
+    if (finished) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => EndPage(points),
         ),
       );
     }
-
   }
 
-  void setNewGoalIndex(){
+  void setNewGoalIndex() {
     //_currentGoalIndex = newIndex;
     points++;
-    int newGoalIndex = (_currentGoalIndex+1) % goalZones.length;
-    Provider.of<FirebaseConnection>(context, listen: false).newGoal((newGoalIndex), points);
+    int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
+    Provider.of<FirebaseConnection>(context, listen: false)
+        .newGoal((newGoalIndex), points);
 
-    if(points >= 3){
+    if (points >= 3) {
       player.play(AssetSource("sounds/win_screen.wav"));
 
       Provider.of<FirebaseConnection>(context, listen: false).endGame();
     } else {
       player.play(AssetSource("sounds/recive_point.mp3"));
     }
-
   }
 
   void goalManager() {
-    int dbCurrentGoal = Provider.of<FirebaseConnection>(context).currentGoalIndex;
-    if((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)){
+    int dbCurrentGoal =
+        Provider.of<FirebaseConnection>(context).currentGoalIndex;
+    if ((dbCurrentGoal != -1) && (dbCurrentGoal != _currentGoalIndex)) {
       setState(() {
         //_startZoneCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
 
-        if(crystalballActivated){
+        if (crystalballActivated) {
           crystalballActivated = false;
         }
 
         _currentGoalIndex = dbCurrentGoal;
-        _goalCoordinates = goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
-        _crystalCoordinates = goalCoordinates(goalZones[(_currentGoalIndex+1)%goalZones.length], 0.00015);
+        _goalCoordinates =
+            goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
+        _crystalCoordinates = goalCoordinates(
+            goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
       });
     }
   }
 
   void activateInvisibility() {
-    if(!(invisibilityActivated || invisibilityQueued)){
+    if (!(invisibilityActivated || invisibilityQueued)) {
       invisibilityQueued = true;
     }
   }
 
   void activateCrystalball() {
-    if(!crystalballActivated){
+    if (!crystalballActivated) {
       crystalballActivated = true;
     }
   }
 
-  void pickUpPowerUp(int powerUpIndex){
-    if(powerUps.length < 2){
-      if(powerUpIndex != -1){
+  void pickUpPowerUp(int powerUpIndex) {
+    if (powerUps.length < 2) {
+      if (powerUpIndex != -1) {
         player.play(AssetSource("sounds/pick_up_powerup.mp3"));
         powerUps.add(random.nextInt(2));
-        Provider.of<FirebaseConnection>(context, listen: false).newPowerUpIndex(powerUpIndex);
+        Provider.of<FirebaseConnection>(context, listen: false)
+            .newPowerUpIndex(powerUpIndex);
       }
     }
   }
 
   void powerUpManager() {
     List<int> dbPowerUp = Provider.of<FirebaseConnection>(context).powerUpIndex;
-    if((dbPowerUp != puIndex)){
+    if ((dbPowerUp != puIndex)) {
       setState(() {
         puIndex = dbPowerUp;
         _currentPowerUpCoordinates.clear();
         for (int value in puIndex) {
-          _currentPowerUpCoordinates.add(goalCoordinates((_powerUpZones[value % _powerUpZones.length]), 0.00015/2));
+          _currentPowerUpCoordinates.add(goalCoordinates(
+              (_powerUpZones[value % _powerUpZones.length]), 0.00015 / 2));
         }
       });
     }
   }
 
   Widget powerUpButtons() {
-    return Row(
-        children: <Widget>[
-          TextButton(
-            style: ButtonStyle(
-              foregroundColor:
-              MaterialStateProperty.all<Color>(Colors.amber),
-              backgroundColor:
-              MaterialStateProperty.all<Color>(Colors.white30),
-            ),
-            onPressed: () {
-              if (powerUps.length > 0) {
-                if((powerUps[0] == 0)) {
-                  activateInvisibility();
-                } else {
-                  activateCrystalball();
-                }
-                player.play(AssetSource("sounds/use_powerup.wav"));
-                powerUps.removeAt(0);
-              }
-            },
-            child: (powerUps.length > 0) ? (powerUps[0] == 0) ? Text("invis") : Text("crystal") : Text("No power up"),
-          ),
-          TextButton(
-            style: ButtonStyle(
-              foregroundColor:
-              MaterialStateProperty.all<Color>(Colors.amber),
-              backgroundColor:
-              MaterialStateProperty.all<Color>(Colors.white30),
-            ),
-            onPressed: () {
-              if (powerUps.length > 1) {
-                if((powerUps[1] == 0)) {
-                  activateInvisibility();
-                } else {
-                  activateCrystalball();
-                }
-                player.play(AssetSource("sounds/use_powerup.wav"));
-                powerUps.removeAt(1);
-              }
-            },
-            child: (powerUps.length > 1) ? (powerUps[1] == 0) ? Text("invis") : Text("crystal") : Text("No power up2"),
-          ),
-        ]
-    );
+    return Row(children: <Widget>[
+      TextButton(
+        style: ButtonStyle(
+          foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+          backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
+        ),
+        onPressed: () {
+          if (powerUps.length > 0) {
+            if ((powerUps[0] == 0)) {
+              activateInvisibility();
+            } else {
+              activateCrystalball();
+            }
+            player.play(AssetSource("sounds/use_powerup.wav"));
+            powerUps.removeAt(0);
+          }
+        },
+        child: (powerUps.length > 0)
+            ? (powerUps[0] == 0)
+                ? Text("invis")
+                : Text("crystal")
+            : Text("No power up"),
+      ),
+      TextButton(
+        style: ButtonStyle(
+          foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+          backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
+        ),
+        onPressed: () {
+          if (powerUps.length > 1) {
+            if ((powerUps[1] == 0)) {
+              activateInvisibility();
+            } else {
+              activateCrystalball();
+            }
+            player.play(AssetSource("sounds/use_powerup.wav"));
+            powerUps.removeAt(1);
+          }
+        },
+        child: (powerUps.length > 1)
+            ? (powerUps[1] == 0)
+                ? Text("invis")
+                : Text("crystal")
+            : Text("No power up2"),
+      ),
+    ]);
   }
 
   @override
@@ -477,127 +489,140 @@ class _MyHomePageState extends State<MyHomePage> {
     powerUpManager();
 
     return Stack(children: [
-        Image.asset("assets/backGround_image.png",
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
-        fit: BoxFit.cover),
+      Image.asset("assets/backGround_image.png",
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          fit: BoxFit.cover),
       Scaffold(
-      backgroundColor: Colors.blueGrey,
-      body: Container(
-        color: goToStart
-            ? Colors.blue
-            : (movedLastRedLight
-            ? Colors.red
-            : (eyeOpened
-            ? Colors.black
-            : Color.fromRGBO(
-            0,
-            0,
-            0,
-            _stopwatch.elapsedMilliseconds /
-                (_roundDuration * 1000)))),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+        backgroundColor: Colors.blueGrey,
+        body: Container(
+          color: goToStart
+              ? Colors.blue
+              : (movedLastRedLight
+                  ? Colors.red
+                  : (eyeOpened
+                      ? Colors.black
+                      : Color.fromRGBO(
+                          0,
+                          0,
+                          0,
+                          _stopwatch.elapsedMilliseconds /
+                              (_roundDuration * 1000)))),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
-              SizedBox(
-                height:
-                (dontMove || goToStart) ? 500 : 0,
-                child: flutterMap(
-                    mapController: _mapController,
-                    context: context,
-                    markerLat: _markerLat,
-                    markerLng: _markerLng,
-                    goalCoordinates: _goalCoordinates,
-                    startZoneCoordinates: _startZoneCoordinates,
-                    crystalCoordinates: crystalballActivated ? (_crystalCoordinates) : [],
-                    powerUpCoordinates: _currentPowerUpCoordinates),),
-              Container(
-                margin: const EdgeInsets.only(top: 16.0),
-                height: 2,
-                width: 200,
-                color: Colors.white,
-              ),
-              dontMove
-                  ? AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 20,
-                width: totalAe * 100,
-                color: Colors.amber,
-              )
-                  : Container(),
-              playing
-                  ? goToStart
-                  ? const Text("GO TO START",
-                  style: TextStyle(fontSize: 36, color: Colors.amber))
-                  : ((movedLastRedLight
-                  ? const Text("ILLEGAL MOVE",
-                  style:
-                  TextStyle(fontSize: 36, color: Colors.amber))
-                  : ((dontMove)
-                  ? const Text("DO NOT MOVE",
-                  style: TextStyle(
-                      fontSize: 36, color: Colors.amber))
-                  : const Text("MOVE",
-                  style: TextStyle(
-                      fontSize: 100, color: Colors.amber)))))
-                  : TextButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                  MaterialStateProperty.all<Color>(Colors.amber),
-                  backgroundColor:
-                  MaterialStateProperty.all<Color>(Colors.white30),
+                SizedBox(
+                  height: (dontMove || goToStart) ? 500 : 0,
+                  child: flutterMap(
+                      mapController: _mapController,
+                      context: context,
+                      markerLat: _markerLat,
+                      markerLng: _markerLng,
+                      goalCoordinates: _goalCoordinates,
+                      startZoneCoordinates: _startZoneCoordinates,
+                      crystalCoordinates:
+                          crystalballActivated ? (_crystalCoordinates) : [],
+                      powerUpCoordinates: _currentPowerUpCoordinates),
                 ),
-                onPressed: () {
-                  if (inStart) {
-                    setState(() {
-                      Provider.of<FirebaseConnection>(context,
-                          listen: false)
-                          .toggleGame(true);
-                      playing = true;
-                      score = 0;
-                    });
-                  } else {
-                    const snackbar = SnackBar(
-                      content: Text(
-                          "Cannot start game when not in starting zone."),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(snackbar);
-                  }
-                },
-                child: const Text('Start Game',
-                    style: TextStyle(fontSize: 18)),
-              ),
-              ((inPowerUp != -1 && !dontMove && !goToStart)) ? TextButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                  MaterialStateProperty.all<Color>(Colors.amber),
-                  backgroundColor:
-                  MaterialStateProperty.all<Color>(Colors.white30),
+                Container(
+                  margin: const EdgeInsets.only(top: 16.0),
+                  height: 2,
+                  width: 200,
+                  color: Colors.white,
                 ),
-                onPressed: () {
-                  pickUpPowerUp(inPowerUp);
-                }, child: Text("Pick up powerUp"),
-              ) : ((inGoal && !dontMove && !goToStart)) ? TextButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                  MaterialStateProperty.all<Color>(Colors.amber),
-                  backgroundColor:
-                  MaterialStateProperty.all<Color>(Colors.white30),
-                ),
-                onPressed: () {
-                  setNewGoalIndex();
-                }, child: Text("Goal!"),
-              ) : Text("Points: $points", style: const TextStyle(color: Colors.white),),
-              powerUpButtons(),
-            ],
+                dontMove
+                    ? AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 20,
+                        width: totalAe * 100,
+                        color: Colors.amber,
+                      )
+                    : Container(),
+                playing
+                    ? goToStart
+                        ? const Text("GO TO START",
+                            style: TextStyle(fontSize: 36, color: Colors.amber))
+                        : ((movedLastRedLight
+                            ? const Text("ILLEGAL MOVE",
+                                style: TextStyle(
+                                    fontSize: 36, color: Colors.amber))
+                            : ((dontMove)
+                                ? const Text("DO NOT MOVE",
+                                    style: TextStyle(
+                                        fontSize: 36, color: Colors.amber))
+                                : const Text("MOVE",
+                                    style: TextStyle(
+                                        fontSize: 100, color: Colors.amber)))))
+                    : TextButton(
+                        style: ButtonStyle(
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.amber),
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white30),
+                        ),
+                        onPressed: () {
+                          if (inStart) {
+                            setState(() {
+                              Provider.of<FirebaseConnection>(context,
+                                      listen: false)
+                                  .toggleGame(true);
+                              playing = true;
+                              score = 0;
+                            });
+                          } else {
+                            const snackbar = SnackBar(
+                              content: Text(
+                                  "Cannot start game when not in starting zone."),
+                            );
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(snackbar);
+                          }
+                        },
+                        child: const Text('Start Game',
+                            style: TextStyle(fontSize: 18)),
+                      ),
+                ((inPowerUp != -1 && !dontMove && !goToStart))
+                    ? TextButton(
+                        style: ButtonStyle(
+                          foregroundColor:
+                              MaterialStateProperty.all<Color>(Colors.amber),
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.white30),
+                        ),
+                        onPressed: () {
+                          pickUpPowerUp(inPowerUp);
+                        },
+                        child: Text("Pick up powerUp"),
+                      )
+                    : ((inGoal && !dontMove && !goToStart))
+                        ? TextButton(
+                            style: ButtonStyle(
+                              foregroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.amber),
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.white30),
+                            ),
+                            onPressed: () {
+                              setNewGoalIndex();
+                            },
+                            child: Text("Goal!"),
+                          )
+                        : Text(
+                            "Points: $points",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                powerUpButtons(),
+              ],
+            ),
           ),
         ),
-      ),
-    )]);
+      )
+    ]);
   }
 }
