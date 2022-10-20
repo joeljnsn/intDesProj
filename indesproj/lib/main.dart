@@ -365,18 +365,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void setNewGoalIndex() {
     //_currentGoalIndex = newIndex;
     goalTaken = true;
-    points++;
     int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
     Provider.of<FirebaseConnection>(context, listen: false)
         .newGoal((newGoalIndex), points);
-
-    if (points >= 3) {
-      player.play(AssetSource("sounds/win_screen.wav"));
-
-      Provider.of<FirebaseConnection>(context, listen: false).endGame();
-    } else {
-      player.play(AssetSource("sounds/recive_point.mp3"));
-    }
   }
 
   void goalManager() {
@@ -395,6 +386,16 @@ class _MyHomePageState extends State<MyHomePage> {
             goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
         _crystalCoordinates = goalCoordinates(
             goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
+
+        points++;
+
+        if (points >= 3) {
+          player.play(AssetSource("sounds/win_screen.wav"));
+
+          Provider.of<FirebaseConnection>(context, listen: false).endGame();
+        } else {
+          player.play(AssetSource("sounds/recive_point.mp3"));
+        }
 
         goalTaken = false;
       });
