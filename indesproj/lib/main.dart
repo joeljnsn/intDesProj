@@ -16,6 +16,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 import 'flutterMap.dart';
 
+double scaleImages = 1.15;
 void main() {
   int id = Random().nextInt(3000);
 
@@ -89,7 +90,10 @@ class _MyHomePageState extends State<MyHomePage> {
   int points = 0;
 
   List<LatLng> _crystalCoordinates = [];
+
+  //BUTTON VARS
   String pathImg = "assets/buttons/png";
+  String interactState = "interactionButton.png";
 
   bool invisibilityQueued = false;
   bool invisibilityActivated = false;
@@ -427,88 +431,144 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget powerUpButtons() {
-    return Center(
-      child:
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-        TextButton(
-          style: ButtonStyle(
-            foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
-          ),
-          onPressed: () {
-            if (powerUps.length > 0) {
-              if ((powerUps[0] == 0)) {
-                activateInvisibility();
-              } else {
-                activateCrystalball();
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          TextButton(
+            style: ButtonStyle(
+              foregroundColor:
+                  MaterialStateProperty.all<Color>(Colors.transparent),
+              backgroundColor:
+                  MaterialStateProperty.all<Color>(Colors.transparent),
+            ),
+            onPressed: () {
+              if (powerUps.length > 0) {
+                if ((powerUps[0] == 0)) {
+                  activateInvisibility();
+                } else {
+                  activateCrystalball();
+                }
+                player.play(AssetSource("sounds/use_powerup.wav"));
+                powerUps.removeAt(0);
               }
-              player.play(AssetSource("sounds/use_powerup.wav"));
-              powerUps.removeAt(0);
-            }
-          },
-          child: (powerUps.length > 0)
-              ? (powerUps[0] == 0)
-                  ? Text("invis")
-                  : Text("crystal")
-              : Text("No power up"),
-        ),
-        const SizedBox(
-          width: 32,
-        ),
-        interactButton(),
-        const SizedBox(
-          width: 32,
-        ),
-        TextButton(
-          style: ButtonStyle(
-            foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
-            backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
+            },
+            child: (powerUps.length > 0)
+                ? (powerUps[0] == 0)
+                    ? Image.asset(
+                        scale: scaleImages,
+                        "$pathImg/invisibilityButton.png",
+                        //fit: BoxFit.cover
+                      )
+                    : Image.asset(
+                        scale: scaleImages,
+                        "$pathImg/crystalBallButton.png",
+                        //fit: BoxFit.cover
+                      )
+                : Image.asset(
+                    scale: scaleImages,
+                    "$pathImg/nullButton.png",
+                    //fit: BoxFit.cover
+                  ),
           ),
-          onPressed: () {
-            if (powerUps.length > 1) {
-              if ((powerUps[1] == 0)) {
-                activateInvisibility();
-              } else {
-                activateCrystalball();
+          const SizedBox(
+            width: 10,
+          ),
+          interactButton(),
+          const SizedBox(
+            width: 10,
+          ),
+          TextButton(
+            // style: ButtonStyle(
+            //   foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+            //   backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
+            // ),
+            onPressed: () {
+              if (powerUps.length > 1) {
+                if ((powerUps[1] == 0)) {
+                  activateInvisibility();
+                } else {
+                  activateCrystalball();
+                }
+                player.play(AssetSource("sounds/use_powerup.wav"));
+                powerUps.removeAt(1);
               }
-              player.play(AssetSource("sounds/use_powerup.wav"));
-              powerUps.removeAt(1);
-            }
-          },
-          child: (powerUps.length > 1)
-              ? (powerUps[1] == 0)
-                  ? Text("invis")
-                  : Text("crystal")
-              : Text("No power up2"),
-        ),
-      ]),
-    );
+            },
+            child: (powerUps.length > 1)
+                ? (powerUps[1] == 0)
+                    ? Image.asset(
+                        scale: scaleImages,
+                        "$pathImg/invisibilityButton.png",
+                        //fit: BoxFit.cover
+                      )
+                    : Image.asset(
+                        scale: scaleImages,
+                        "$pathImg/crystalBallButton.png",
+                        //fit: BoxFit.cover
+                      )
+                : Image.asset(
+                    scale: scaleImages,
+                    "$pathImg/nullButton.png",
+                    //fit: BoxFit.cover
+                  ),
+          ),
+        ]);
   }
 
   Widget interactButton() {
     return ((inPowerUp != -1 && !goToStart)) //pick up powerUp
-        ? TextButton(
-            style: ButtonStyle(
-              foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
-              backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
-            ),
-            onPressed: () {
+        ? GestureDetector(
+            onTapDown: (tap) {
+              setState(() {
+                interactState = "interactionButton_pressed.png";
+              });
+            },
+            onTapCancel: () {
+              setState(() {
+                interactState = "interactionButton.png";
+              });
+            },
+            onTapUp: (tap) {
+              setState(() {
+                interactState = "interactionButton.png";
+              });
               pickUpPowerUp(inPowerUp);
             },
-            child: Text("Pick up powerUp"),
+            child: Image.asset(
+                scale: scaleImages,
+                "$pathImg/$interactState",
+                fit: BoxFit.cover),
           )
+        // TextButton(
+        //     style: ButtonStyle(
+        //       foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
+        //       backgroundColor: MaterialStateProperty.all<Color>(Colors.white30),
+        //     ),
+        //     onPressed: () {
+        //       pickUpPowerUp(inPowerUp);
+        //     },
+        //     child: Text("Pick up powerUp"),
+        //   )
         : ((inGoal && !goToStart)) // Pick up goal zone
-            ? TextButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.amber),
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white30),
-                ),
-                onPressed: () {
+            ? GestureDetector(
+                onTapDown: (tap) {
+                  setState(() {
+                    interactState = "interactionButton_pressed.png";
+                  });
+                },
+                onTapCancel: () {
+                  setState(() {
+                    interactState = "interactionButton.png";
+                  });
+                },
+                onTapUp: (tap) {
+                  setState(() {
+                    interactState = "interactionButton.png";
+                  });
                   setNewGoalIndex();
                 },
-                child: Text("Goal!"),
+                child:
+                    Image.asset("$pathImg/$interactState", fit: BoxFit.cover),
               )
             : GestureDetector(
                 onTap: () {},
@@ -545,11 +605,23 @@ class _MyHomePageState extends State<MyHomePage> {
                   : (eyeOpened
                       ? Colors.transparent
                       : Color.fromRGBO(
-                          0,
-                          0,
-                          0,
-                          _stopwatch.elapsedMilliseconds /
-                              (_roundDuration * 1000)))),
+                          (84 +
+                                  165 *
+                                      (_stopwatch.elapsedMilliseconds /
+                                          (_roundDuration * 1000)))
+                              .toInt(),
+                          (140 -
+                                  53 *
+                                      (_stopwatch.elapsedMilliseconds /
+                                          (_roundDuration * 1000)))
+                              .toInt(),
+                          (47 +
+                                  18 *
+                                      (_stopwatch.elapsedMilliseconds /
+                                          (_roundDuration * 1000)))
+                              .toInt(),
+                          1, //_stopwatch.elapsedMilliseconds /(_roundDuration * 1000)
+                        ))),
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
@@ -560,17 +632,20 @@ class _MyHomePageState extends State<MyHomePage> {
                 /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
                 SizedBox(
-                  height: (dontMove || goToStart) ? 500 : 0,
-                  child: flutterMap(
-                      mapController: _mapController,
-                      context: context,
-                      markerLat: _markerLat,
-                      markerLng: _markerLng,
-                      goalCoordinates: _goalCoordinates,
-                      startZoneCoordinates: _startZoneCoordinates,
-                      crystalCoordinates:
-                          crystalballActivated ? (_crystalCoordinates) : [],
-                      powerUpCoordinates: _currentPowerUpCoordinates),
+                  height: (dontMove || goToStart) ? 500 : 150,
+                  child: dontMove
+                      ? flutterMap(
+                          mapController: _mapController,
+                          context: context,
+                          markerLat: _markerLat,
+                          markerLng: _markerLng,
+                          goalCoordinates: _goalCoordinates,
+                          startZoneCoordinates: _startZoneCoordinates,
+                          crystalCoordinates:
+                              crystalballActivated ? (_crystalCoordinates) : [],
+                          powerUpCoordinates: _currentPowerUpCoordinates)
+                      : Image.asset("$pathImg/eye_closed.png",
+                          fit: BoxFit.cover),
                 ),
                 Container(
                   margin: const EdgeInsets.only(top: 16.0),
