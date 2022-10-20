@@ -190,7 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
         if (totalAe > 2 &&
             playing &&
             _checkForMovement &&
-            ((eyeOpened && !invisibilityActivated) || movedLastRedLight) && !goToStart) {
+            ((eyeOpened && !invisibilityActivated) || movedLastRedLight) &&
+            !goToStart) {
           score++;
           if ((score >= 10) ||
               (score > 5 &&
@@ -291,7 +292,7 @@ class _MyHomePageState extends State<MyHomePage> {
             }
           } else {
             //open -> closed.
-            Future.delayed(const Duration (milliseconds: 1750), () {
+            Future.delayed(const Duration(milliseconds: 1750), () {
               player.play(AssetSource("sounds/green_phase.wav"));
             });
             Vibration.vibrate(pattern: [1750, 110, 30, 110]);
@@ -365,6 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void setNewGoalIndex() {
     //_currentGoalIndex = newIndex;
     goalTaken = true;
+    inGoal = false;
     int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
     Provider.of<FirebaseConnection>(context, listen: false)
         .newGoal((newGoalIndex), points);
@@ -386,21 +388,21 @@ class _MyHomePageState extends State<MyHomePage> {
             goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
         _crystalCoordinates = goalCoordinates(
             goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
-
-        if(goalTaken){
-          points++;
-        }
-
-        if (points >= 3) {
-          player.play(AssetSource("sounds/win_screen.wav"));
-
-          Provider.of<FirebaseConnection>(context, listen: false).endGame();
-        } else {
-          player.play(AssetSource("sounds/recive_point.mp3"));
-        }
-
-        goalTaken = false;
       });
+
+      if (goalTaken) {
+        points++;
+      }
+
+      if (points >= 3) {
+        player.play(AssetSource("sounds/win_screen.wav"));
+
+        Provider.of<FirebaseConnection>(context, listen: false).endGame();
+      } else {
+        player.play(AssetSource("sounds/recive_point.mp3"));
+      }
+
+      goalTaken = false;
     }
   }
 
@@ -467,7 +469,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 ? (powerUps[0] == 0)
                     ? Image.asset(
                         scale: scaleImages,
-                      (!invisibilityActivated) ? "$pathImg/invisibilityButton.png" : "$pathImg/invisibilityButton_active.png",
+                        (!invisibilityActivated)
+                            ? "$pathImg/invisibilityButton.png"
+                            : "$pathImg/invisibilityButton_active.png",
                         //fit: BoxFit.cover
                       )
                     : Image.asset(
@@ -575,7 +579,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   setState(() {
                     interactState = "interactionButton.png";
                   });
-                  if(!goalTaken){
+                  if (!goalTaken) {
                     setNewGoalIndex();
                   }
                 },
@@ -602,7 +606,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     powerUpManager();
 
-    if(goToStart){
+    if (goToStart) {
       player.play(AssetSource("sounds/tic_toc.mp3"));
     }
 
