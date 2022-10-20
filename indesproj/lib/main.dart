@@ -89,6 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int points = 0;
 
   List<LatLng> _crystalCoordinates = [];
+  String pathImg = "assets/buttons/png";
 
   bool invisibilityQueued = false;
   bool invisibilityActivated = false;
@@ -343,14 +344,13 @@ class _MyHomePageState extends State<MyHomePage> {
           .addToDatabase(_markerLat, _markerLng, points);
     }
 
-    if(finished) {
+    if (finished) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => EndPage(points),
         ),
       );
     }
-
   }
 
   void setNewGoalIndex() {
@@ -510,15 +510,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Text("Goal!"),
               )
-            : TextButton(
-                style: ButtonStyle(
-                  foregroundColor:
-                      MaterialStateProperty.all<Color>(Colors.amber),
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.white30),
-                ),
-                onPressed: () {},
-                child: Text("No interaction "),
+            : GestureDetector(
+                onTap: () {},
+                child: Image.asset("$pathImg/interactionButton_null.png",
+                    fit: BoxFit.cover),
               );
   }
 
