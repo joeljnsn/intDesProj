@@ -47,15 +47,33 @@ class flutterMap extends StatelessWidget {
     ImageProvider mapBackground =
         const Image(image: AssetImage('assets/MapBackground.png')).image;
 
-    List<Polygon> powerUpPolygons = [];
+    //List<Polygon> powerUpPolygons = [];
+    List<Marker> powerUpMarkers = [];
 
     for(List<LatLng> powerUpCoordinate in _powerUpCoordinates){
-      powerUpPolygons.add(
+      /*powerUpPolygons.add(
         Polygon(
           points: powerUpCoordinate,
           color: const Color.fromRGBO(123, 0, 255, 0.4),
-          isFilled: true,
+          isFilled: false,
+          borderColor: const Color.fromRGBO(123, 0, 255, 0.4),
+          borderStrokeWidth: 2,
         )
+      );*/
+
+      double centerPowerUpLat = (powerUpCoordinate[0].latitude + powerUpCoordinate[3].latitude) / 2;
+      double centerPowerUpLng = (powerUpCoordinate[0].longitude + powerUpCoordinate[1].longitude) / 2;
+
+      powerUpMarkers.add(
+          Marker(
+            point: LatLng(centerPowerUpLat, centerPowerUpLng), //User marker
+            width: 40,
+            height: 40,
+            builder: (context) => Image.asset(
+              "assets/buttons/png/powerup.png",
+              width: 40,
+              height: 40,),
+          )
       );
     }
 
@@ -97,7 +115,7 @@ class flutterMap extends StatelessWidget {
                   imageProvider: mapBackground)
             ]),
             MarkerLayer(
-              markers: Provider.of<FirebaseConnection>(context).userMarkers +
+              markers: Provider.of<FirebaseConnection>(context).userMarkers + powerUpMarkers +
                   [
                     Marker(
                       point: LatLng(_markerLat, _markerLng), //User marker
@@ -130,7 +148,7 @@ class flutterMap extends StatelessWidget {
                     color: const Color.fromRGBO(255, 255, 0, .4),
                     isFilled: true,
                 ),
-              ] + powerUpPolygons,
+              ] //+ powerUpPolygons,
             ),
           ],
         ),
