@@ -387,7 +387,9 @@ class _MyHomePageState extends State<MyHomePage> {
         _crystalCoordinates = goalCoordinates(
             goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
 
-        points++;
+        if(goalTaken){
+          points++;
+        }
 
         if (points >= 3) {
           player.play(AssetSource("sounds/win_screen.wav"));
