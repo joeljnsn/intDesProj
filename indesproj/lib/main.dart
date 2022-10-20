@@ -124,8 +124,11 @@ class _MyHomePageState extends State<MyHomePage> {
   List<int> puIndex = [0, 1];
 
   Random random = Random(42);
+  Random randomPhase = Random(8);
 
   final player = AudioPlayer();
+
+  bool goalTaken = false;
 
   void initLocation() async {
     Location location = Location();
@@ -187,7 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if (totalAe > 2 &&
             playing &&
             _checkForMovement &&
-            ((eyeOpened && !invisibilityActivated) || movedLastRedLight)) {
+            ((eyeOpened && !invisibilityActivated) || movedLastRedLight) && !goToStart) {
           score++;
           if ((score >= 10) ||
               (score > 5 &&
@@ -249,23 +252,21 @@ class _MyHomePageState extends State<MyHomePage> {
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
     if (invisibilityActivated) {
       invisibilityActivated = false;
+      powerUps.removeAt(0);
     }
     started = true;
     _checkForMovement = false;
     score = 0;
     if (eyeOpened) {
-      player.play(AssetSource("sounds/red_swap.wav"));
       movedLastRedLight = false;
       if (invisibilityQueued) {
         invisibilityQueued = false;
         invisibilityActivated = true;
       }
-    } else {
-      player.play(AssetSource("sounds/green_phase.wav"));
     }
     _stopwatch.reset();
     _stopwatch.start();
-    _roundDuration = random.nextInt(5) + 5;
+    _roundDuration = randomPhase.nextInt(5) + 5;
     vibrationTimer(_roundDuration - 2);
     checkForMovementTimer(1);
     _timer = Timer(
@@ -285,10 +286,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
             //check if invi is queued
             if (!invisibilityQueued) {
+              player.play(AssetSource("sounds/red_swap.wav"));
               Vibration.vibrate(duration: 2000);
             }
           } else {
             //open -> closed.
+            Future.delayed(const Duration (milliseconds: 1750), () {
+              player.play(AssetSource("sounds/green_phase.wav"));
+            });
             Vibration.vibrate(pattern: [1750, 110, 30, 110]);
           }
         }
@@ -359,6 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void setNewGoalIndex() {
     //_currentGoalIndex = newIndex;
+    goalTaken = true;
     points++;
     int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
     Provider.of<FirebaseConnection>(context, listen: false)
@@ -389,6 +395,8 @@ class _MyHomePageState extends State<MyHomePage> {
             goalCoordinates(goalZones[_currentGoalIndex], 0.00015);
         _crystalCoordinates = goalCoordinates(
             goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
+
+        goalTaken = false;
       });
     }
   }
@@ -450,14 +458,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   activateCrystalball();
                 }
                 player.play(AssetSource("sounds/use_powerup.wav"));
-                powerUps.removeAt(0);
               }
             },
             child: (powerUps.length > 0)
                 ? (powerUps[0] == 0)
                     ? Image.asset(
                         scale: scaleImages,
-                        "$pathImg/invisibilityButton.png",
+                      (!invisibilityActivated) ? "$pathImg/invisibilityButton.png" : "$pathImg/invisibilityButton_active.png",
                         //fit: BoxFit.cover
                       )
                     : Image.asset(
@@ -565,7 +572,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   setState(() {
                     interactState = "interactionButton.png";
                   });
-                  setNewGoalIndex();
+                  if(!goalTaken){
+                    setNewGoalIndex();
+                  }
                 },
                 child:
                     Image.asset("$pathImg/$interactState", fit: BoxFit.cover),
@@ -589,6 +598,10 @@ class _MyHomePageState extends State<MyHomePage> {
     goalManager();
 
     powerUpManager();
+
+    if(goToStart){
+      player.play(AssetSource("sounds/tic_toc.mp3"));
+    }
 
     return Stack(children: [
       Image.asset("assets/backGround_image.png",
@@ -633,7 +646,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
                 SizedBox(
                   height: (dontMove || goToStart) ? 500 : 150,
-                  child: dontMove
+                  child: (dontMove || goToStart)
                       ? flutterMap(
                           mapController: _mapController,
                           context: context,
