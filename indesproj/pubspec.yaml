@@ -68,6 +68,7 @@ flutter:
       - asset: Assets/Cooper Black Regular.ttf
   assets:
     - assets/MapBackground.png
+    - assets/buttons
     - assets/backGround_image.png
     - assets/sounds/go_back.wav
     - assets/sounds/green_phase.wav
