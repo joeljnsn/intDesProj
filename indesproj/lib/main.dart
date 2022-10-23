@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
       title: 'Test',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.pink,
+        primarySwatch: Colors.orange,
       ),
       home: const StartPage(),
     );
@@ -193,8 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ((eyeOpened && !invisibilityActivated) || movedLastRedLight) &&
             !goToStart) {
           score++;
-          if ((score >= 10) ||
-              (score > 5 &&
+          if ((score > 5 &&
                   movedLastRedLight &&
                   (eyeOpened && !invisibilityActivated))) {
             goToStart = true;
@@ -204,6 +203,8 @@ class _MyHomePageState extends State<MyHomePage> {
           } else if (score >= 5 && score < 10) {
             player.play(AssetSource("sounds/strike.wav"));
             movedLastRedLight = true;
+            _checkForMovement = false;
+            checkForMovementTimer(1);
           }
         }
       });
@@ -359,11 +360,14 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (finished) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => EndPage(points),
-        ),
-      );
+      Future.delayed(const Duration(seconds: 0), () async {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => EndPage(points),
+          ),
+        );
+        Provider.of<FirebaseConnection>(context, listen: false).toggleGame(false);
+      });
     }
   }
 
@@ -657,7 +661,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
                 SizedBox(
-                  height: (dontMove || goToStart) ? 500 : 150,
+                  height: (dontMove || goToStart) ? 400 : 150,
                   child: (dontMove || goToStart)
                       ? Stack(
                         children: <Widget>[
@@ -734,54 +738,58 @@ class _MyHomePageState extends State<MyHomePage> {
                       : Image.asset("$pathImg/eye_closed.png",
                           fit: BoxFit.cover),
                 ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 16.0),
-                    child: Image.asset("$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png", fit: BoxFit.cover)
-                  ),
-                dontMove
-                    ? Stack(
-                        alignment: AlignmentDirectional.center,
-                        children: <Widget>[
-                          Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: 35,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: Colors.black,
-                                  width: 5,
-                                  style: BorderStyle.solid,
+                (dontMove || goToStart)
+                    ? Column(
+                      children: [
+                        Container(
+                            margin: const EdgeInsets.only(top: 16.0),
+                            child: Image.asset("$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png", fit: BoxFit.cover)
+                        ),
+                        Stack(
+                            alignment: AlignmentDirectional.center,
+                            children: <Widget>[
+                              Container(
+                                width: MediaQuery.of(context).size.width,
+                                height: 35,
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 5,
+                                      style: BorderStyle.solid,
+                                    ),
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(10))),
+                              ),
+                              AnimatedContainer(
+                                clipBehavior: Clip.none,
+                                margin: EdgeInsets.symmetric(horizontal: 8),
+                                duration: const Duration(milliseconds: 200),
+                                decoration: BoxDecoration(
+                                  color: (totalAe > 2) ? Colors.red : Colors.amber,
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
-                                borderRadius: const BorderRadius.all(
-                                    Radius.circular(10))),
-                          ),
-                          AnimatedContainer(
-                            clipBehavior: Clip.none,
-                            margin: EdgeInsets.symmetric(horizontal: 8),
-                            duration: const Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              color: (totalAe > 2) ? Colors.red : Colors.amber,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            height: 20,
-                            width: totalAe * 100,
-                          ),
-                          Positioned(
-                              left: 70,
-                              child: Container(
-                                color: Color.fromRGBO(84, 140, 47, 1),
-                                width: 4,
-                                height: 25,
+                                height: 20,
+                                width: totalAe * 100,
+                              ),
+                              Positioned(
+                                  left: 70,
+                                  child: Container(
+                                    color: Color.fromRGBO(84, 140, 47, 1),
+                                    width: 4,
+                                    height: 25,
+                                  )),
+                              Positioned(
+                                  right: 70,
+                                  child: Container(
+                                    color: Color.fromRGBO(84, 140, 47, 1),
+                                    width: 4,
+                                    height: 25,
                               )),
-                          Positioned(
-                              right: 70,
-                              child: Container(
-                                color: Color.fromRGBO(84, 140, 47, 1),
-                                width: 4,
-                                height: 25,
-                          )),
-                        ],
-                      )
+                            ],
+                          ),
+                      ],
+                    )
                     : Container(),
                 playing
                     ? goToStart
@@ -801,9 +809,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     : TextButton(
                         style: ButtonStyle(
                           foregroundColor:
-                              MaterialStateProperty.all<Color>(Colors.amber),
+                              MaterialStateProperty.all<Color>(Colors.white),
                           backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.white30),
+                              MaterialStateProperty.all<Color>(Colors.blue),
                         ),
                         onPressed: () {
                           if (inStart) {
