@@ -678,9 +678,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  height: 40,
-                                  width: 120,
+                                  height: 50,
+                                  width: 130,
                                   decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.black,
+                                      width: 5,
+                                      style: BorderStyle.solid,
+                                    ),
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(16),
                                     ),
@@ -720,7 +725,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                   ),
                                 Image.asset("$pathImg/eye_open.png", fit: BoxFit.cover),
-                                const SizedBox(height: 50, width: 120,),
+                                const SizedBox(width: 130,),
                               ],
                             ),
                           ),
@@ -750,6 +755,17 @@ class _MyHomePageState extends State<MyHomePage> {
                                 borderRadius: const BorderRadius.all(
                                     Radius.circular(10))),
                           ),
+                          AnimatedContainer(
+                            clipBehavior: Clip.none,
+                            margin: EdgeInsets.symmetric(horizontal: 8),
+                            duration: const Duration(milliseconds: 200),
+                            decoration: BoxDecoration(
+                              color: Colors.amber,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            height: 20,
+                            width: totalAe * 100,
+                          ),
                           Positioned(
                               left: 70,
                               child: Container(
@@ -763,14 +779,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 color: Color.fromRGBO(84, 140, 47, 1),
                                 width: 4,
                                 height: 25,
-                              )),
-                          AnimatedContainer(
-                            clipBehavior: Clip.none,
-                            duration: const Duration(milliseconds: 200),
-                            height: 20,
-                            width: totalAe * 100,
-                            color: Colors.amber,
-                          ),
+                          )),
                         ],
                       )
                     : Container(),
