@@ -834,10 +834,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: const Text('Start Game',
                             style: TextStyle(fontSize: 18)),
                       ),
-                Text(
-                  "Points: $points",
-                  style: const TextStyle(color: Colors.white),
-                ),
                 powerUpButtons(),
               ],
             ),
