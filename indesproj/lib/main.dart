@@ -794,18 +794,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 playing
                     ? goToStart
                         ? const Text("GO TO START",
-                            style: TextStyle(fontSize: 36, color: Colors.amber))
+                            style: TextStyle(fontSize: 36, color: Colors.black))
                         : ((movedLastRedLight
                             ? const Text("ILLEGAL MOVE",
                                 style: TextStyle(
-                                    fontSize: 36, color: Colors.amber))
+                                    fontSize: 36, color: Colors.black))
                             : ((dontMove)
                                 ? const Text("DO NOT MOVE",
                                     style: TextStyle(
-                                        fontSize: 36, color: Colors.amber))
+                                        fontSize: 36, color: Colors.black))
                                 : const Text("MOVE",
                                     style: TextStyle(
-                                        fontSize: 100, color: Colors.amber)))))
+                                        fontSize: 100, color: Colors.black)))))
                     : TextButton(
                         style: ButtonStyle(
                           foregroundColor:
