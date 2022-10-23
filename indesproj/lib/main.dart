@@ -729,18 +729,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       : Image.asset("$pathImg/eye_closed.png",
                           fit: BoxFit.cover),
                 ),
-                Column(
-                  children: [
-                    Container(
-                        margin: const EdgeInsets.only(top: 16.0),
-                        child: Image.asset("$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png", fit: BoxFit.cover)),
-                    Container(
-                      height: 2,
-                      width: 200,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 16.0),
+                    child: Image.asset("$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png", fit: BoxFit.cover)
+                  ),
                 dontMove
                     ? Stack(
                         alignment: AlignmentDirectional.center,
