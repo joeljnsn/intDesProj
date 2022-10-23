@@ -760,7 +760,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             margin: EdgeInsets.symmetric(horizontal: 8),
                             duration: const Duration(milliseconds: 200),
                             decoration: BoxDecoration(
-                              color: Colors.amber,
+                              color: (totalAe > 2) ? Colors.red : Colors.amber,
                               borderRadius: BorderRadius.circular(5),
                             ),
                             height: 20,
