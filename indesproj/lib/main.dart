@@ -742,11 +742,44 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
                 dontMove
-                    ? AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        height: 20,
-                        width: totalAe * 100,
-                        color: Colors.amber,
+                    ? Stack(
+                        alignment: AlignmentDirectional.center,
+                        children: <Widget>[
+                          Container(
+                            width: MediaQuery.of(context).size.width,
+                            height: 35,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                  color: Colors.black,
+                                  width: 5,
+                                  style: BorderStyle.solid,
+                                ),
+                                borderRadius: const BorderRadius.all(
+                                    Radius.circular(10))),
+                          ),
+                          Positioned(
+                              left: 70,
+                              child: Container(
+                                color: Color.fromRGBO(84, 140, 47, 1),
+                                width: 4,
+                                height: 25,
+                              )),
+                          Positioned(
+                              right: 70,
+                              child: Container(
+                                color: Color.fromRGBO(84, 140, 47, 1),
+                                width: 4,
+                                height: 25,
+                              )),
+                          AnimatedContainer(
+                            clipBehavior: Clip.none,
+                            duration: const Duration(milliseconds: 200),
+                            height: 20,
+                            width: totalAe * 100,
+                            color: Colors.amber,
+                          ),
+                        ],
                       )
                     : Container(),
                 playing
