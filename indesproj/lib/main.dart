@@ -253,7 +253,11 @@ class _MyHomePageState extends State<MyHomePage> {
         .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
     if (invisibilityActivated) {
       invisibilityActivated = false;
-      powerUps.removeAt(0);
+      if ((powerUps[0] == 0)) {
+        powerUps.removeAt(0);
+      } else {
+        powerUps.removeAt(1);
+      }
     }
     started = true;
     _checkForMovement = false;
@@ -461,6 +465,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   activateInvisibility();
                 } else {
                   activateCrystalball();
+                  powerUps.removeAt(0);
                 }
                 player.play(AssetSource("sounds/use_powerup.wav"));
               }
@@ -503,9 +508,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   activateInvisibility();
                 } else {
                   activateCrystalball();
+                  powerUps.removeAt(1);
                 }
                 player.play(AssetSource("sounds/use_powerup.wav"));
-                powerUps.removeAt(1);
               }
             },
             child: (powerUps.length > 1)
@@ -654,24 +659,87 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(
                   height: (dontMove || goToStart) ? 500 : 150,
                   child: (dontMove || goToStart)
-                      ? flutterMap(
-                          mapController: _mapController,
-                          context: context,
-                          markerLat: _markerLat,
-                          markerLng: _markerLng,
-                          goalCoordinates: _goalCoordinates,
-                          startZoneCoordinates: _startZoneCoordinates,
-                          crystalCoordinates:
-                              crystalballActivated ? (_crystalCoordinates) : [],
-                          powerUpCoordinates: _currentPowerUpCoordinates)
+                      ? Stack(
+                        children: <Widget>[
+                          flutterMap(
+                            mapController: _mapController,
+                            context: context,
+                            markerLat: _markerLat,
+                            markerLng: _markerLng,
+                            goalCoordinates: _goalCoordinates,
+                            startZoneCoordinates: _startZoneCoordinates,
+                            crystalCoordinates:
+                                crystalballActivated ? (_crystalCoordinates) : [],
+                            powerUpCoordinates: _currentPowerUpCoordinates),
+                          Container(
+                            margin: const EdgeInsets.all(8),
+                            height: 50,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  height: 40,
+                                  width: 120,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  child: Row(
+                                    children: <Widget>[
+                                      Container(
+                                        width: 30,
+                                        height: 30,
+                                        margin: EdgeInsets.symmetric(horizontal: 5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black12,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: (points >= 1) ? Image.asset("$pathImg/Coin.png", fit: BoxFit.cover,) : Container(),
+                                      ),
+                                      Container(
+                                        width: 30,
+                                        height: 30,
+                                        margin: EdgeInsets.symmetric(horizontal: 5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black12,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: (points >= 2) ? Image.asset("$pathImg/Coin.png", fit: BoxFit.cover,) : Container(),
+                                      ),
+                                      Container(
+                                        width: 30,
+                                        height: 30,
+                                        margin: EdgeInsets.symmetric(horizontal: 5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black12,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: (points >= 2) ? Image.asset("$pathImg/Coin.png", fit: BoxFit.cover,) : Container(),
+                                      ),
+                                    ]
+                                  ),
+                                  ),
+                                Image.asset("$pathImg/eye_open.png", fit: BoxFit.cover),
+                                const SizedBox(height: 50, width: 120,),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
                       : Image.asset("$pathImg/eye_closed.png",
                           fit: BoxFit.cover),
                 ),
-                Container(
-                  margin: const EdgeInsets.only(top: 16.0),
-                  height: 2,
-                  width: 200,
-                  color: Colors.white,
+                Column(
+                  children: [
+                    Container(
+                        margin: const EdgeInsets.only(top: 16.0),
+                        child: Image.asset("$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png", fit: BoxFit.cover)),
+                    Container(
+                      height: 2,
+                      width: 200,
+                      color: Colors.white,
+                    ),
+                  ],
                 ),
                 dontMove
                     ? AnimatedContainer(

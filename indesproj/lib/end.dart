@@ -14,20 +14,7 @@ class EndPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text("Goal!!! $time", style: const TextStyle(color: Colors.white)),
-          TextButton(
-            style: ButtonStyle(
-              foregroundColor: MaterialStateProperty.all<Color>(Colors.amber),
-            ),
-            onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (context) => const MyHomePage(),
-                ),
-              );
-            },
-            child: const Text('Play again'),
-          )
+          Text((time >= 3) ? "You win! :)" : "You lose :(", style: const TextStyle(color: Colors.white, fontSize: 22)),
         ],
       ),
     );
