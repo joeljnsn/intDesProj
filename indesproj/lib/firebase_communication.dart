@@ -115,7 +115,7 @@ class FirebaseConnection with ChangeNotifier {
     newIndex.add(highest+1);
     print(newIndex);
 
-    refGameState.update({'powerUpIndex' : newIndex});
+    refGameState.set({'powerUpIndex' : newIndex});
   }
 
   void updateGamestate(Object data) {
