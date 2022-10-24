@@ -58,9 +58,6 @@ class FirebaseConnection with ChangeNotifier {
       }
     });
 
-    refMe.onDisconnect().remove();
-    refGameState.onDisconnect().set({'playing' : false, 'finished' : false, 'powerUpIndex' : [0, 1, 2, 3]});
-
   }
 
   addToDatabase(double lat, double long, int points) async {

@@ -8,9 +8,9 @@ class EndPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       backgroundColor: Colors.black,
-      body: Center(child: Text((time >= 3) ? "You win! :)" : "You lose :(", style: const TextStyle(color: Colors.white, fontSize: 22))),
+      body: Center(child: Text("Game ended", style: TextStyle(color: Colors.white, fontSize: 22))),
     );
   }
 }

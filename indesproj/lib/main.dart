@@ -234,8 +234,6 @@ class _MyHomePageState extends State<MyHomePage> {
             builder: (context) => EndPage(points),
           ),
         );
-        Provider.of<FirebaseConnection>(context, listen: false)
-            .toggleGame(false);
       });
     }
   }
