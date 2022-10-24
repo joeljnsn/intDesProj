@@ -445,7 +445,7 @@ class _MyHomePageState extends State<MyHomePage> {
         powerUps.add(random.nextInt(2));
         Provider.of<FirebaseConnection>(context, listen: false)
             .newPowerUpIndex(powerUpIndex);
-        powerUpIndex = -1;
+        inPowerUp = -1;
       }
     }
   }
