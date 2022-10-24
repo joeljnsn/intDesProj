@@ -104,7 +104,7 @@ class FirebaseConnection with ChangeNotifier {
     List<int> newIndex = [];
 
     for (int v in powerUpIndex) {
-      int value = (v % powerUpIndex.length);
+      int value = (v % 6);
       if(value != i){
         newIndex.add(value);
       }
@@ -114,9 +114,9 @@ class FirebaseConnection with ChangeNotifier {
     }
 
 
-    highest = (highest+1) % powerUpIndex.length;
+    highest = (highest+1) % 6;
     while(newIndex.contains(highest)){
-     highest = (highest+1) % powerUpIndex.length;
+     highest = (highest+1) % 6;
     }
     newIndex.add(highest);
     print(newIndex);
