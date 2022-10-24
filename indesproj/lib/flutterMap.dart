@@ -91,7 +91,7 @@ class flutterMap extends StatelessWidget {
           options: MapOptions(
             center: LatLng(57.70630741457879,
                 11.940503180030372), // set map center to LatLng(0, 0),
-            zoom: 17.5,
+            zoom: 18.5,
             interactiveFlags: InteractiveFlag.none,
           ),
           mapController: _mapController,

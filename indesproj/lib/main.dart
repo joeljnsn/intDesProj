@@ -33,7 +33,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
-      home: const StartPage(),
+      home: const MyHomePage(
+      ),
     );
   }
 }
@@ -504,18 +505,13 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Container(
-                    margin: const EdgeInsets.all(16),
-                    child: Image.asset("assets/logo.png", fit: BoxFit.cover)),
-                /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-              Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
-                Container(
                   margin: const EdgeInsets.all(16),
-                  height: 150,
+                  height: 100,
                   child: eyeOpened ? Image.asset("$pathImg/eye_open.png", fit: BoxFit.cover) : Image.asset("$pathImg/eye_closed.png", fit: BoxFit.cover),
                 ),
                 SizedBox(
-                  height: 400,
-                  width: 400,
+                  height: 650,
+                  width: 650,
                   child: flutterMap(
                       mapController: _mapController,
                       context: context,
