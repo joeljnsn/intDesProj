@@ -127,7 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
   List<int> puIndex = [0, 1, 2, 3];
 
   Random random = Random(42);
-  Random randomPhase = Random(8);
+
+  int iDur = 0;
+
+  List<int> phaseDuration = [6, 6, 7, 8, 7, 6, 5, 7, 8, 6, 7, 7, 6, 5, 8, 9, 6, 6, 9, 7, 8];
 
   final player = AudioPlayer();
 
@@ -278,7 +281,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     _stopwatch.reset();
     _stopwatch.start();
-    _roundDuration = randomPhase.nextInt(5) + 5;
+    _roundDuration = phaseDuration[iDur%phaseDuration.length];
+    iDur++;
     vibrationTimer(_roundDuration - 2);
     checkForMovementTimer(1);
     _timer = Timer(
@@ -356,6 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
       eyeOpened = true;
       movedLastRedLight = false;
       goToStart = false;
+      iDur = 0;
       score = 0;
       points = 0;
       invisibilityQueued = false;
