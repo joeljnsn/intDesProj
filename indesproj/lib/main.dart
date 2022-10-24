@@ -108,9 +108,12 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
 
   final List<LatLng> _powerUpZones = [
-    LatLng(57.706333, 11.939523),
-    LatLng(57.706023612872755, 11.940756720610546),
-    LatLng(57.705805041084346, 11.94015509216082),
+    LatLng(57.70642924986367, 11.939885890601499),
+    LatLng(57.70596056302828, 11.94080948681495),
+    LatLng(57.70582419454079, 11.94032390472206),
+    LatLng(57.70653651888252, 11.941387120560112),
+    LatLng(57.70694083772142, 11.941112203974354),
+    LatLng(57.70607597611035, 11.941823375453465),
   ];
 
   List<List<LatLng>> _currentPowerUpCoordinates = [];
@@ -121,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //Users powerups 0 is invisibility, 1 is crystal ball
   List<int> powerUps = [];
 
-  List<int> puIndex = [0, 1];
+  List<int> puIndex = [0, 1, 2, 3];
 
   Random random = Random(42);
   Random randomPhase = Random(8);
@@ -193,18 +196,21 @@ class _MyHomePageState extends State<MyHomePage> {
             ((eyeOpened && !invisibilityActivated) || movedLastRedLight) &&
             !goToStart) {
           score++;
-          if ((score > 5 &&
-              movedLastRedLight &&
-              (eyeOpened && !invisibilityActivated))) {
+          if (score > 2 &&
+              movedLastRedLight) {
             goToStart = true;
             player.play(AssetSource("sounds/go_back.wav"));
             score = 0;
             movedLastRedLight = false;
-          } else if (score >= 5 && score < 10) {
+            Vibration.vibrate(duration: 500);
+          } else if (score > 2 && !movedLastRedLight &&
+              (eyeOpened && !invisibilityActivated)) {
             player.play(AssetSource("sounds/strike.wav"));
+            score = 0;
             movedLastRedLight = true;
             _checkForMovement = false;
             checkForMovementTimer(1);
+            Vibration.vibrate(duration: 1000);
           }
         }
       });

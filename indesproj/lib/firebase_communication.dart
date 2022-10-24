@@ -21,7 +21,7 @@ class FirebaseConnection with ChangeNotifier {
 
   bool playing = false;
   int currentGoalIndex = 0;
-  List<int> powerUpIndex = [0, 1];
+  List<int> powerUpIndex = [0, 1, 2, 3];
 
   bool finished = false;
 
@@ -59,7 +59,7 @@ class FirebaseConnection with ChangeNotifier {
     });
 
     refMe.onDisconnect().remove();
-    refGameState.onDisconnect().set({'playing' : false, 'finished' : false, 'powerUpIndex' : [0, 1]});
+    refGameState.onDisconnect().set({'playing' : false, 'finished' : false, 'powerUpIndex' : [0, 1, 2, 3]});
 
   }
 
@@ -122,7 +122,7 @@ class FirebaseConnection with ChangeNotifier {
     Map<String, dynamic> GameStateMap = Map<String, dynamic>.from(data as Map);
     playing = GameStateMap["playing"] ?? false;
     currentGoalIndex = GameStateMap["goalIndex"] ?? -1;
-    List<Object?> powerUpIndexObject = GameStateMap["powerUpIndex"] ?? [0, 1];
+    List<Object?> powerUpIndexObject = GameStateMap["powerUpIndex"] ?? [0, 1, 2, 3];
 
     finished = GameStateMap["finished"] ?? false;
 
@@ -136,7 +136,7 @@ class FirebaseConnection with ChangeNotifier {
   }
 
   void toggleGame(bool state) {
-    refGameState.set({'playing' : state, 'finished' : false, 'powerUpIndex' : [0, 1]});
+    refGameState.set({'playing' : state, 'finished' : false, 'powerUpIndex' : [0, 1, 2, 3]});
   }
 
   void endGame() {
