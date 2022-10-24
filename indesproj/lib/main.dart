@@ -16,7 +16,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 import 'flutterMap.dart';
 
-double scaleImages = 1.15;
+double scaleImages = 1.53;
 void main() {
   int id = Random().nextInt(3000);
 
@@ -194,8 +194,8 @@ class _MyHomePageState extends State<MyHomePage> {
             !goToStart) {
           score++;
           if ((score > 5 &&
-                  movedLastRedLight &&
-                  (eyeOpened && !invisibilityActivated))) {
+              movedLastRedLight &&
+              (eyeOpened && !invisibilityActivated))) {
             goToStart = true;
             player.play(AssetSource("sounds/go_back.wav"));
             score = 0;
@@ -366,7 +366,8 @@ class _MyHomePageState extends State<MyHomePage> {
             builder: (context) => EndPage(points),
           ),
         );
-        Provider.of<FirebaseConnection>(context, listen: false).toggleGame(false);
+        Provider.of<FirebaseConnection>(context, listen: false)
+            .toggleGame(false);
       });
     }
   }
@@ -592,12 +593,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     setNewGoalIndex();
                   }
                 },
-                child:
-                    Image.asset("$pathImg/$interactState", fit: BoxFit.cover),
+                child: Image.asset(
+                  scale: scaleImages,
+                  "$pathImg/$interactState",
+                  fit: BoxFit.cover,
+                ),
               )
             : GestureDetector(
                 onTap: () {},
-                child: Image.asset("$pathImg/interactionButton_null.png",
+                child: Image.asset(
+                    scale: scaleImages,
+                    "$pathImg/interactionButton_null.png",
                     fit: BoxFit.cover),
               );
   }
@@ -664,88 +670,113 @@ class _MyHomePageState extends State<MyHomePage> {
                   height: (dontMove || goToStart) ? 400 : 150,
                   child: (dontMove || goToStart)
                       ? Stack(
-                        children: <Widget>[
-                          flutterMap(
-                            mapController: _mapController,
-                            context: context,
-                            markerLat: _markerLat,
-                            markerLng: _markerLng,
-                            goalCoordinates: _goalCoordinates,
-                            startZoneCoordinates: _startZoneCoordinates,
-                            crystalCoordinates:
-                                crystalballActivated ? (_crystalCoordinates) : [],
-                            powerUpCoordinates: _currentPowerUpCoordinates),
-                          Container(
-                            margin: const EdgeInsets.all(8),
-                            height: 50,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  height: 50,
-                                  width: 130,
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 5,
-                                      style: BorderStyle.solid,
+                          children: <Widget>[
+                            flutterMap(
+                                mapController: _mapController,
+                                context: context,
+                                markerLat: _markerLat,
+                                markerLng: _markerLng,
+                                goalCoordinates: _goalCoordinates,
+                                startZoneCoordinates: _startZoneCoordinates,
+                                crystalCoordinates: crystalballActivated
+                                    ? (_crystalCoordinates)
+                                    : [],
+                                powerUpCoordinates: _currentPowerUpCoordinates),
+                            Container(
+                              margin: const EdgeInsets.all(8),
+                              height: 50,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    height: 50,
+                                    width: 130,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black,
+                                        width: 5,
+                                        style: BorderStyle.solid,
+                                      ),
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    ),
-                                  child: Row(
-                                    children: <Widget>[
+                                    child: Row(children: <Widget>[
                                       Container(
                                         width: 30,
                                         height: 30,
-                                        margin: EdgeInsets.symmetric(horizontal: 5),
+                                        margin:
+                                            EdgeInsets.symmetric(horizontal: 5),
                                         decoration: BoxDecoration(
                                           color: Colors.black12,
-                                          borderRadius: BorderRadius.circular(100),
+                                          borderRadius:
+                                              BorderRadius.circular(100),
                                         ),
-                                        child: (points >= 1) ? Image.asset("$pathImg/Coin.png", fit: BoxFit.cover,) : Container(),
+                                        child: (points >= 1)
+                                            ? Image.asset(
+                                                "$pathImg/Coin.png",
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(),
                                       ),
                                       Container(
                                         width: 30,
                                         height: 30,
-                                        margin: EdgeInsets.symmetric(horizontal: 5),
+                                        margin:
+                                            EdgeInsets.symmetric(horizontal: 5),
                                         decoration: BoxDecoration(
                                           color: Colors.black12,
-                                          borderRadius: BorderRadius.circular(100),
+                                          borderRadius:
+                                              BorderRadius.circular(100),
                                         ),
-                                        child: (points >= 2) ? Image.asset("$pathImg/Coin.png", fit: BoxFit.cover,) : Container(),
+                                        child: (points >= 2)
+                                            ? Image.asset(
+                                                "$pathImg/Coin.png",
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(),
                                       ),
                                       Container(
                                         width: 30,
                                         height: 30,
-                                        margin: EdgeInsets.symmetric(horizontal: 5),
+                                        margin:
+                                            EdgeInsets.symmetric(horizontal: 5),
                                         decoration: BoxDecoration(
                                           color: Colors.black12,
-                                          borderRadius: BorderRadius.circular(100),
+                                          borderRadius:
+                                              BorderRadius.circular(100),
                                         ),
-                                        child: (points >= 2) ? Image.asset("$pathImg/Coin.png", fit: BoxFit.cover,) : Container(),
+                                        child: (points >= 2)
+                                            ? Image.asset(
+                                                "$pathImg/Coin.png",
+                                                fit: BoxFit.cover,
+                                              )
+                                            : Container(),
                                       ),
-                                    ]
+                                    ]),
                                   ),
+                                  Image.asset("$pathImg/eye_open.png",
+                                      fit: BoxFit.cover),
+                                  const SizedBox(
+                                    width: 110,
                                   ),
-                                Image.asset("$pathImg/eye_open.png", fit: BoxFit.cover),
-                                const SizedBox(width: 130,),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      )
+                          ],
+                        )
                       : Image.asset("$pathImg/eye_closed.png",
                           fit: BoxFit.cover),
                 ),
                 (dontMove || goToStart)
                     ? Column(
-                      children: [
-                        Container(
-                            margin: const EdgeInsets.only(top: 16.0),
-                            child: Image.asset("$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png", fit: BoxFit.cover)
-                        ),
-                        Stack(
+                        children: [
+                          Container(
+                              margin: const EdgeInsets.only(top: 16.0),
+                              child: Image.asset(
+                                  "$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png",
+                                  fit: BoxFit.cover)),
+                          Stack(
                             alignment: AlignmentDirectional.center,
                             children: <Widget>[
                               Container(
@@ -766,7 +797,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 margin: EdgeInsets.symmetric(horizontal: 8),
                                 duration: const Duration(milliseconds: 200),
                                 decoration: BoxDecoration(
-                                  color: (totalAe > 2) ? Colors.red : Colors.amber,
+                                  color:
+                                      (totalAe > 2) ? Colors.red : Colors.amber,
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                                 height: 20,
@@ -785,11 +817,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                     color: Color.fromRGBO(84, 140, 47, 1),
                                     width: 4,
                                     height: 25,
-                              )),
+                                  )),
                             ],
                           ),
-                      ],
-                    )
+                        ],
+                      )
                     : Container(),
                 playing
                     ? goToStart

@@ -68,12 +68,12 @@ class flutterMap extends StatelessWidget {
 
       powerUpMarkers.add(Marker(
         point: LatLng(centerPowerUpLat, centerPowerUpLng),
-        width: 40,
-        height: 40,
+        width: 35,
+        height: 35,
         builder: (context) => Image.asset(
           "assets/buttons/png/powerup.png",
-          width: 40,
-          height: 40,
+          width: 35,
+          height: 35,
         ),
       ));
     }
@@ -146,12 +146,12 @@ class flutterMap extends StatelessWidget {
                           ((_goalCoordinates[0].longitude +
                                   _goalCoordinates[1].longitude) /
                               2)),
-                      width: 50,
-                      height: 51,
+                      width: 45,
+                      height: 45,
                       builder: (context) => Image.asset(
                         "assets/buttons/png/Coin.png",
-                        width: 50,
-                        height: 51,
+                        width: 45,
+                        height: 45,
                       ),
                     ),
                     Marker(
