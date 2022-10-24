@@ -244,8 +244,6 @@ class _MyHomePageState extends State<MyHomePage> {
     goalTaken = true;
     inGoal = false;
     int newGoalIndex = (_currentGoalIndex + 1) % goalZones.length;
-    Provider.of<FirebaseConnection>(context, listen: false)
-        .newGoal((newGoalIndex), points);
   }
 
   void goalManager() {
@@ -272,8 +270,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
       if (points >= 3) {
         player.play(AssetSource("sounds/win_screen.wav"));
-
-        Provider.of<FirebaseConnection>(context, listen: false).endGame();
       } else {
         player.play(AssetSource("sounds/recive_point.mp3"));
       }
