@@ -445,6 +445,7 @@ class _MyHomePageState extends State<MyHomePage> {
         powerUps.add(random.nextInt(2));
         Provider.of<FirebaseConnection>(context, listen: false)
             .newPowerUpIndex(powerUpIndex);
+        powerUpIndex = -1;
       }
     }
   }
@@ -490,7 +491,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ? (powerUps[0] == 0)
                     ? Image.asset(
                         scale: scaleImages,
-                        (!invisibilityActivated)
+                        (!invisibilityActivated || invisibilityQueued)
                             ? "$pathImg/invisibilityButton.png"
                             : "$pathImg/invisibilityButton_active.png",
                         //fit: BoxFit.cover
@@ -757,7 +758,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                           borderRadius:
                                               BorderRadius.circular(100),
                                         ),
-                                        child: (points >= 2)
+                                        child: (points >= 3)
                                             ? Image.asset(
                                                 "$pathImg/Coin.png",
                                                 fit: BoxFit.cover,
@@ -839,7 +840,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ? const Text("GO TO START",
                             style: TextStyle(fontSize: 36, color: Colors.black))
                         : ((movedLastRedLight
-                            ? const Text("ILLEGAL MOVE",
+                            ? const Text("MOVEMENT FORBIDDEN",
                                 style: TextStyle(
                                     fontSize: 36, color: Colors.black))
                             : ((dontMove)
