@@ -103,7 +103,8 @@ class FirebaseConnection with ChangeNotifier {
     int highest = 0;
     List<int> newIndex = [];
 
-    for (int value in powerUpIndex) {
+    for (int v in powerUpIndex) {
+      int value = (v % powerUpIndex.length);
       if(value != i){
         newIndex.add(value);
       }
@@ -112,7 +113,12 @@ class FirebaseConnection with ChangeNotifier {
       }
     }
 
-    newIndex.add(highest+1);
+
+    highest = (highest+1) % powerUpIndex.length;
+    while(newIndex.contains(highest)){
+     highest = (highest+1) % powerUpIndex.length;
+    }
+    newIndex.add(highest);
     print(newIndex);
 
     refGameState.set({'powerUpIndex' : newIndex});
