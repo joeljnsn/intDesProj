@@ -531,7 +531,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text("Leaderboard", style: TextStyle(fontSize: 36, color: Colors.black)),
+                    const Text("Scoreboard", style: TextStyle(fontSize: 36, color: Colors.black)),
                     Container(
                       height: 700,
                       width: 300,
