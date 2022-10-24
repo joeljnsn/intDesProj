@@ -5,12 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:indesproj/end.dart';
 import 'package:indesproj/firebase_communication.dart';
 import 'package:indesproj/start.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:location/location.dart';
-import 'package:vibration/vibration.dart';
-import 'package:wakelock/wakelock.dart';
 import 'package:provider/provider.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -50,11 +46,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late UserAccelerometerEvent ae;
-  double totalAe = 0;
-  double aeX = 0;
-  double aeY = 0;
-  double aeZ = 0;
   late MapController _mapController;
   double _markerLat = 0;
   double _markerLng = 0;
@@ -64,16 +55,12 @@ class _MyHomePageState extends State<MyHomePage> {
   int _roundDuration = 1;
   bool eyeOpened = true;
 
-  late Timer _vibrationTimer;
-
   bool inGoal = false;
   List<LatLng> _goalCoordinates = [];
   bool inStart = false;
   List<LatLng> _startZoneCoordinates = [];
 
   late LatLng currentLatLng;
-
-  late bool _hasVibration;
 
   bool playing = false;
   bool started = false;
@@ -127,102 +114,19 @@ class _MyHomePageState extends State<MyHomePage> {
   List<int> puIndex = [0, 1, 2, 3];
 
   Random random = Random(42);
-  Random randomPhase = Random(8);
 
   final player = AudioPlayer();
 
   bool goalTaken = false;
 
-  void initLocation() async {
-    Location location = Location();
-
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
-
-    serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        return;
-      }
-    }
-
-    permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
-
-    location.onLocationChanged.listen((LocationData currentLoc) {
-      setState(() {
-        _markerLat = currentLoc.latitude ?? 0;
-        _markerLng = currentLoc.longitude ?? 0;
-        currentLatLng = LatLng(_markerLat, _markerLng);
-
-        inGoal = checkInGoal(currentLatLng, _goalCoordinates);
-        inStart = checkInGoal(currentLatLng, _startZoneCoordinates);
-        inPowerUp = checkInPowerUp(currentLatLng, _currentPowerUpCoordinates);
-      });
-
-      if ((inPowerUp != -1) && !eyeOpened && !goToStart) {
-        ableToPickUp = true;
-      } else {
-        ableToPickUp = false;
-      }
-
-      if (goToStart && inStart) {
-        score = 0;
-        movedLastRedLight = false;
-        goToStart = false;
-      }
-    });
-  }
+  int iDur = 0;
+  
+  List<int> phaseDuration = [6, 6, 7, 8, 7, 6, 5, 7, 8, 6, 7, 7, 6, 5, 8, 9, 6, 6, 9, 7, 8];
 
   @override
   initState() {
-    userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-      setState(() {
-        ae = event;
-        aeX = (event.x).abs();
-        aeY = (event.y).abs();
-        aeZ = (event.z).abs();
-        totalAe = aeX + aeY + aeZ;
-
-        if (totalAe > 2 &&
-            playing &&
-            _checkForMovement &&
-            ((eyeOpened && !invisibilityActivated) || movedLastRedLight) &&
-            !goToStart) {
-          score++;
-          if (score > 2 &&
-              movedLastRedLight) {
-            goToStart = true;
-            player.play(AssetSource("sounds/go_back.wav"));
-            score = 0;
-            movedLastRedLight = false;
-            Vibration.vibrate(duration: 500);
-          } else if (score > 2 && !movedLastRedLight &&
-              (eyeOpened && !invisibilityActivated)) {
-            player.play(AssetSource("sounds/strike.wav"));
-            score = 0;
-            movedLastRedLight = true;
-            _checkForMovement = false;
-            checkForMovementTimer(1);
-            Vibration.vibrate(duration: 1000);
-          }
-        }
-      });
-    });
-
-    Wakelock.enable(); //Does not work?
-
-    ae = UserAccelerometerEvent(0, 0, 0);
 
     _mapController = MapController();
-
-    initLocation();
 
     //_currentGoalIndex = Random(66).nextInt(goalZones.length-2);
 
@@ -235,8 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _crystalCoordinates = goalCoordinates(
         goalZones[(_currentGoalIndex + 1) % goalZones.length], 0.00015);
 
-    initVibration();
-
     //gameStateTimer();
     super.initState();
   }
@@ -246,26 +148,10 @@ class _MyHomePageState extends State<MyHomePage> {
     _mapController.dispose();
     _timer.cancel();
     player.dispose();
-    Wakelock.disable();
     super.dispose();
   }
 
-  void initVibration() async {
-    bool? checkVibration = await Vibration.hasVibrator();
-    _hasVibration = checkVibration ?? false;
-  }
-
   void gameStateTimer() {
-    Provider.of<FirebaseConnection>(context, listen: false)
-        .addToDatabase(currentLatLng.latitude, currentLatLng.longitude, points);
-    if (invisibilityActivated) {
-      invisibilityActivated = false;
-      if ((powerUps[0] == 0)) {
-        powerUps.removeAt(0);
-      } else {
-        powerUps.removeAt(1);
-      }
-    }
     started = true;
     _checkForMovement = false;
     score = 0;
@@ -278,38 +164,16 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     _stopwatch.reset();
     _stopwatch.start();
-    _roundDuration = randomPhase.nextInt(5) + 5;
-    vibrationTimer(_roundDuration - 2);
+    _roundDuration = phaseDuration[iDur%phaseDuration.length];
+    iDur++;
     checkForMovementTimer(1);
     _timer = Timer(
         Duration(seconds: _roundDuration), //random between 4 and 10 seconds
         () {
-      eyeOpened = !eyeOpened;
+          setState(() {
+            eyeOpened = !eyeOpened;
+          });
       gameStateTimer();
-    });
-  }
-
-  void vibrationTimer(int vibDuration) {
-    _vibrationTimer = Timer(Duration(seconds: vibDuration), () {
-      if (_hasVibration) {
-        if (!movedLastRedLight && !goToStart) {
-          if (!eyeOpened) {
-            //closed -> open.
-
-            //check if invi is queued
-            if (!invisibilityQueued) {
-              player.play(AssetSource("sounds/red_swap.wav"));
-              Vibration.vibrate(duration: 2000);
-            }
-          } else {
-            //open -> closed.
-            Future.delayed(const Duration(milliseconds: 1750), () {
-              player.play(AssetSource("sounds/green_phase.wav"));
-            });
-            Vibration.vibrate(pattern: [1750, 110, 30, 110]);
-          }
-        }
-      }
     });
   }
 
@@ -351,18 +215,16 @@ class _MyHomePageState extends State<MyHomePage> {
       gameStateTimer();
     } else if (!playing && started) {
       _timer.cancel();
-      _vibrationTimer.cancel();
       started = false;
       eyeOpened = true;
       movedLastRedLight = false;
       goToStart = false;
       score = 0;
       points = 0;
+      iDur = 0;
       invisibilityQueued = false;
       invisibilityActivated = false;
       crystalballActivated = false;
-      Provider.of<FirebaseConnection>(context, listen: false)
-          .addToDatabase(_markerLat, _markerLng, points);
     }
 
     if (finished) {
@@ -438,8 +300,6 @@ class _MyHomePageState extends State<MyHomePage> {
       if (powerUpIndex != -1) {
         player.play(AssetSource("sounds/pick_up_powerup.mp3"));
         powerUps.add(random.nextInt(2));
-        Provider.of<FirebaseConnection>(context, listen: false)
-            .newPowerUpIndex(powerUpIndex);
       }
     }
   }
@@ -621,8 +481,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
     checkIfPlaying();
 
-    bool dontMove = (eyeOpened && !invisibilityActivated) || movedLastRedLight;
-
     goalManager();
 
     powerUpManager();
@@ -638,241 +496,52 @@ class _MyHomePageState extends State<MyHomePage> {
           fit: BoxFit.cover),
       Scaffold(
         backgroundColor: Colors.transparent,
-        body: Container(
-          color: goToStart
-              ? Colors.blue
-              : (movedLastRedLight
-                  ? Colors.red
-                  : (eyeOpened
-                      ? Colors.transparent
-                      : Color.fromRGBO(
-                          (84 +
-                                  165 *
-                                      (_stopwatch.elapsedMilliseconds /
-                                          (_roundDuration * 1000)))
-                              .toInt(),
-                          (140 -
-                                  53 *
-                                      (_stopwatch.elapsedMilliseconds /
-                                          (_roundDuration * 1000)))
-                              .toInt(),
-                          (47 +
-                                  18 *
-                                      (_stopwatch.elapsedMilliseconds /
-                                          (_roundDuration * 1000)))
-                              .toInt(),
-                          1, //_stopwatch.elapsedMilliseconds /(_roundDuration * 1000)
-                        ))),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
+        body: Padding(
+          padding:
+              const EdgeInsets.symmetric(vertical: 32.0, horizontal: 16.0),
+          child: SizedBox(
+            width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                Container(
+                    margin: const EdgeInsets.all(16),
+                    child: Image.asset("assets/logo.png", fit: BoxFit.cover)),
                 /*const Text("Accelerometer:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
               Text("x: ${ae.x.toStringAsFixed(4)} y: ${ae.y.toStringAsFixed(4)} z: ${ae.z.toStringAsFixed(4)}"),*/
-                SizedBox(
-                  height: (dontMove || goToStart) ? 400 : 150,
-                  child: (dontMove || goToStart)
-                      ? Stack(
-                          children: <Widget>[
-                            flutterMap(
-                                mapController: _mapController,
-                                context: context,
-                                markerLat: _markerLat,
-                                markerLng: _markerLng,
-                                goalCoordinates: _goalCoordinates,
-                                startZoneCoordinates: _startZoneCoordinates,
-                                crystalCoordinates: crystalballActivated
-                                    ? (_crystalCoordinates)
-                                    : [],
-                                powerUpCoordinates: _currentPowerUpCoordinates),
-                            Container(
-                              margin: const EdgeInsets.all(8),
-                              height: 50,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    height: 50,
-                                    width: 130,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Colors.black,
-                                        width: 5,
-                                        style: BorderStyle.solid,
-                                      ),
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Row(children: <Widget>[
-                                      Container(
-                                        width: 30,
-                                        height: 30,
-                                        margin:
-                                            EdgeInsets.symmetric(horizontal: 5),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black12,
-                                          borderRadius:
-                                              BorderRadius.circular(100),
-                                        ),
-                                        child: (points >= 1)
-                                            ? Image.asset(
-                                                "$pathImg/Coin.png",
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Container(),
-                                      ),
-                                      Container(
-                                        width: 30,
-                                        height: 30,
-                                        margin:
-                                            EdgeInsets.symmetric(horizontal: 5),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black12,
-                                          borderRadius:
-                                              BorderRadius.circular(100),
-                                        ),
-                                        child: (points >= 2)
-                                            ? Image.asset(
-                                                "$pathImg/Coin.png",
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Container(),
-                                      ),
-                                      Container(
-                                        width: 30,
-                                        height: 30,
-                                        margin:
-                                            EdgeInsets.symmetric(horizontal: 5),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black12,
-                                          borderRadius:
-                                              BorderRadius.circular(100),
-                                        ),
-                                        child: (points >= 2)
-                                            ? Image.asset(
-                                                "$pathImg/Coin.png",
-                                                fit: BoxFit.cover,
-                                              )
-                                            : Container(),
-                                      ),
-                                    ]),
-                                  ),
-                                  Image.asset("$pathImg/eye_open.png",
-                                      fit: BoxFit.cover),
-                                  const SizedBox(
-                                    width: 110,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                      : Image.asset("$pathImg/eye_closed.png",
-                          fit: BoxFit.cover),
+                Container(
+                  margin: const EdgeInsets.all(16),
+                  height: 150,
+                  child: eyeOpened ? Image.asset("$pathImg/eye_open.png", fit: BoxFit.cover) : Image.asset("$pathImg/eye_closed.png", fit: BoxFit.cover),
                 ),
-                (dontMove || goToStart)
-                    ? Column(
-                        children: [
-                          Container(
-                              margin: const EdgeInsets.only(top: 16.0),
-                              child: Image.asset(
-                                  "$pathImg/strikeCounter_${movedLastRedLight ? "one" : (goToStart ? "two" : "no")}Strikes.png",
-                                  fit: BoxFit.cover)),
-                          Stack(
-                            alignment: AlignmentDirectional.center,
-                            children: <Widget>[
-                              Container(
-                                width: MediaQuery.of(context).size.width,
-                                height: 35,
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                      color: Colors.black,
-                                      width: 5,
-                                      style: BorderStyle.solid,
-                                    ),
-                                    borderRadius: const BorderRadius.all(
-                                        Radius.circular(10))),
-                              ),
-                              AnimatedContainer(
-                                clipBehavior: Clip.none,
-                                margin: EdgeInsets.symmetric(horizontal: 8),
-                                duration: const Duration(milliseconds: 200),
-                                decoration: BoxDecoration(
-                                  color:
-                                      (totalAe > 2) ? Colors.red : Colors.amber,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                height: 20,
-                                width: totalAe * 100,
-                              ),
-                              Positioned(
-                                  left: 70,
-                                  child: Container(
-                                    color: Color.fromRGBO(84, 140, 47, 1),
-                                    width: 4,
-                                    height: 25,
-                                  )),
-                              Positioned(
-                                  right: 70,
-                                  child: Container(
-                                    color: Color.fromRGBO(84, 140, 47, 1),
-                                    width: 4,
-                                    height: 25,
-                                  )),
-                            ],
-                          ),
-                        ],
-                      )
-                    : Container(),
-                playing
-                    ? goToStart
-                        ? const Text("GO TO START",
-                            style: TextStyle(fontSize: 36, color: Colors.black))
-                        : ((movedLastRedLight
-                            ? const Text("ILLEGAL MOVE",
-                                style: TextStyle(
-                                    fontSize: 36, color: Colors.black))
-                            : ((dontMove)
-                                ? const Text("DO NOT MOVE",
-                                    style: TextStyle(
-                                        fontSize: 36, color: Colors.black))
-                                : const Text("MOVE",
-                                    style: TextStyle(
-                                        fontSize: 100, color: Colors.black)))))
-                    : TextButton(
-                        style: ButtonStyle(
-                          foregroundColor:
-                              MaterialStateProperty.all<Color>(Colors.white),
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.blue),
-                        ),
-                        onPressed: () {
-                          if (inStart) {
-                            setState(() {
-                              Provider.of<FirebaseConnection>(context,
-                                      listen: false)
-                                  .toggleGame(true);
-                              playing = true;
-                              score = 0;
-                            });
-                          } else {
-                            const snackbar = SnackBar(
-                              content: Text(
-                                  "Cannot start game when not in starting zone."),
-                            );
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(snackbar);
-                          }
-                        },
-                        child: const Text('Start Game',
-                            style: TextStyle(fontSize: 18)),
-                      ),
-                powerUpButtons(),
+                SizedBox(
+                  height: 400,
+                  width: 400,
+                  child: flutterMap(
+                      mapController: _mapController,
+                      context: context,
+                      markerLat: _markerLat,
+                      markerLng: _markerLng,
+                      goalCoordinates: _goalCoordinates,
+                      startZoneCoordinates: _startZoneCoordinates,
+                      crystalCoordinates: crystalballActivated
+                          ? (_crystalCoordinates)
+                          : [],
+                      powerUpCoordinates: _currentPowerUpCoordinates),
+                ),
+                Container(
+                    margin: const EdgeInsets.all(16),
+                  child: playing
+                      ? eyeOpened
+                      ? const Text("FREEZE PHASE",
+                      style: TextStyle(
+                          fontSize: 36, color: Colors.black))
+                      : const Text("MOVE PHASE",
+                      style: TextStyle(
+                          fontSize: 36, color: Colors.black))
+                      : const Text("GAME HAS NOT STARTED", style: TextStyle(fontSize: 36, color: Colors.black))
+                ),
               ],
             ),
           ),
