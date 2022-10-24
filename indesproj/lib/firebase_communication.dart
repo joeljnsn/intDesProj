@@ -14,7 +14,9 @@ class FirebaseConnection with ChangeNotifier {
   late DatabaseReference refMe;
   late DatabaseReference refGameState;
   late Map<String, dynamic> _playerPositions;
+  List<int> playerPoints = [];
   List<Marker> _userMarkers = [];
+  List<Color> colors = [Colors.red, Colors.green, Colors.pink, Colors.purple, Colors.amber, Colors.teal];
 
   late DatabaseReference refUsers;
   String id = "";
@@ -66,27 +68,33 @@ class FirebaseConnection with ChangeNotifier {
 
   void updatePlayers(Object data) {
     _playerPositions = Map<String, dynamic>.from(data as Map);
+    playerPoints = [];
+    _playerPositions.forEach((key, value) {
+      playerPoints.add(value["points"]);
+    });
     populateMarkers();
     notifyListeners();
   }
 
   void populateMarkers(){
     List<Marker> newUserMarkers = [];
+    int colorId = 0;
     _playerPositions.forEach((key, value) {
-      if(key != id){
-        Marker newMarker = Marker(
-          point: LatLng(value["latitude"] ?? 0, value["longitude"] ?? 0), //User marker
-          width: 20,
-          height: 20,
-          builder: (context) => Container(
-            decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 6)),
-          ),
-        );
-        newUserMarkers.add(newMarker);
-      }
+      print(colorId);
+      Color currentColor = colors[colorId];
+      Marker newMarker = Marker(
+        point: LatLng(value["latitude"] ?? 0, value["longitude"] ?? 0), //User marker
+        width: 20,
+        height: 20,
+        builder: (context) => Container(
+          decoration: BoxDecoration(
+              color: currentColor,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 6)),
+        ),
+      );
+      newUserMarkers.add(newMarker);
+      colorId++;
     });
     _userMarkers = newUserMarkers;
   }
