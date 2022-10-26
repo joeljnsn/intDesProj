@@ -100,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool crystalballActivated = false;
 
   final List<LatLng> goalZones = [
-    LatLng(57.70680144781405, 11.941158728073676),
+    LatLng(57.70610440868219, 11.941196582465118),
     LatLng(57.70652503728925, 11.940347613243238),
     LatLng(57.706023612872755, 11.940756720610546),
     LatLng(57.705805041084346, 11.94015509216082),
@@ -838,18 +838,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 playing
                     ? goToStart
                         ? const Text("GO TO START",
-                            style: TextStyle(fontSize: 36, color: Colors.black))
+                            style: TextStyle(fontSize: 36, color: Colors.black, fontFamily: 'Cooper Black'))
                         : ((movedLastRedLight
                             ? const Text("MOVEMENT FORBIDDEN",
                                 style: TextStyle(
-                                    fontSize: 36, color: Colors.black))
+                                    fontSize: 36, color: Colors.black, fontFamily: 'Cooper Black'))
                             : ((dontMove)
                                 ? const Text("DO NOT MOVE",
                                     style: TextStyle(
-                                        fontSize: 36, color: Colors.black))
+                                        fontSize: 36, color: Colors.black, fontFamily: 'Cooper Black'))
                                 : const Text("MOVE",
                                     style: TextStyle(
-                                        fontSize: 100, color: Colors.black)))))
+                                        fontSize: 100, color: Colors.black, fontFamily: 'Cooper Black')))))
                     : TextButton(
                         style: ButtonStyle(
                           foregroundColor:
@@ -876,7 +876,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           }
                         },
                         child: const Text('Start Game',
-                            style: TextStyle(fontSize: 18)),
+                            style: TextStyle(fontSize: 18, fontFamily: 'Cooper Black')),
                       ),
                 powerUpButtons(),
               ],

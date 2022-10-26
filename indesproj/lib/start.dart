@@ -44,7 +44,7 @@ class _StartPageState extends State<StartPage> {
                     ),
                   );
                 },
-                child: const Text('Play', style: TextStyle(fontSize: 24)),
+                child: const Text('Play', style: TextStyle(fontSize: 24, fontFamily: 'Cooper Black')),
               ),
             ],
           )
